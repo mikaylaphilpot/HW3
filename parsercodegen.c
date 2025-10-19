@@ -24,6 +24,18 @@ Class: COP3402 - System Software - Fall 2025
 Instructor: Dr. Jie Lin
 Due Date: Friday, October 31, 2025 at 11:59 PM ET
 */
+#define MAX_SYMBOL_TABLE_SIZE 500
+
+typedef struct {
+    int kind; // const = 1, var = 2, proc = 3
+    char name[12]; // name up to 11 chars
+    int val; // number (ASCII value)
+    int level; // L level
+    int addr; // M address
+    int mark; // to indicate unavailable or deleted
+} symbol;
+
+symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 void printAssemblyCode() {
     // To-Do: Figure out what parameters need to be passed
