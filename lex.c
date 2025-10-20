@@ -143,26 +143,28 @@ void printLexemeTable(Token * allTokens, int size){
 
 void printTokenList(Token * allTokens, int size){
 
-    printf("\n\nToken List:\n\n");
+    FILE * fptr;
+    fptr = fopen("tokens.txt", "w");
+
+    fprintf(fptr, "\n\nToken List:\n\n");
 
     for(int i = 0; i < size; i++) {
 
-        printf("%d ", allTokens[i].tokenType);
         
         //Printing Identifiers and Numbers
-        if(allTokens[i].tokenType == 2) {
+        if(allTokens[i].tokenType == 2 || allTokens[i].tokenType == 3) {
 
-            printf("%s ", allTokens[i].lexeme);
-
-        }
-        else if(allTokens[i].tokenType == 3) {
-
-            printf("%s ", allTokens[i].lexeme);
+            fprintf(fptr, "%d %s ", allTokens[i].tokenType, allTokens[i].lexeme);
 
         }
+        else {
 
+            fprintf(fptr, "%d ", allTokens[i].tokenType);
+
+        }
+        fprintf(fptr, "\n");
     }
-    printf("\n");
+    
     
 }
 

@@ -59,8 +59,8 @@ int main (int argc, char *argv[])
     } 
 
     // Note: input file name is hardcoded
-    // TO-DO take input from lex.c output file
-
+    // take input from lex.c output file
+    fopen("tokens.txt", "r");
     // TO-DO read through each token and check for potential errors as you read
     // Produce assembly code if no errors are found
     // Otherwise only the first error message should be produced, both in terminal and elf.txt
