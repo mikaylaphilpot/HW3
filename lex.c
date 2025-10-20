@@ -146,8 +146,6 @@ void printTokenList(Token * allTokens, int size){
     FILE * fptr;
     fptr = fopen("tokens.txt", "w");
 
-    fprintf(fptr, "\n\nToken List:\n\n");
-
     for(int i = 0; i < size; i++) {
 
         
@@ -516,9 +514,7 @@ int main(int argc, char *argv[]){
         }
     }
 
-    // print lexeme table and token list
-    printLexemeTable(tokenList, tokenIndex);
-
+    // print token list to tokens.txt
     printTokenList(tokenList, tokenIndex);   
       
 }

@@ -25,6 +25,7 @@ Instructor: Dr. Jie Lin
 Due Date: Friday, October 31, 2025 at 11:59 PM ET
 */
 #define MAX_SYMBOL_TABLE_SIZE 500
+#include <stdio.h>
 
 typedef struct {
     int kind; // const = 1, var = 2, proc = 3
@@ -60,7 +61,22 @@ int main (int argc, char *argv[])
 
     // Note: input file name is hardcoded
     // take input from lex.c output file
-    fopen("tokens.txt", "r");
+    FILE *fp = fopen("tokens.txt", "r");
+    FILE *outputFile = fopen("elf.txt", "w");
+    
+    int nextToken = 0;
+    char * identifier = malloc(sizeof(char)*12);
+    // reading through each token in input file
+    while(fscanf(fp, "%d", &nextToken) == 1) {
+        // checking for skipsym error
+        if (nextToken == 1) {
+            printf("Error: Scanning error detected by lexer (skipsym present)");
+            fprintf(outputFile, "Error: Scanning error detected by lexer (skipsym present)");
+        }
+        else if (nextToken == 2) {
+            fscanf(fp, "%s", &identifier);
+        }
+    }
     // TO-DO read through each token and check for potential errors as you read
     // Produce assembly code if no errors are found
     // Otherwise only the first error message should be produced, both in terminal and elf.txt
