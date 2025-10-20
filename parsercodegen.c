@@ -73,8 +73,28 @@ int main (int argc, char *argv[])
             printf("Error: Scanning error detected by lexer (skipsym present)");
             fprintf(outputFile, "Error: Scanning error detected by lexer (skipsym present)");
         }
+        // Syntax error 1
+        else if (nextToken == 21) {
+            nextToken = fscanf(fp, "%d", &nextToken);
+            if (nextToken != 18) {
+                printf("Error: program must end with period");
+                fprintf(outputFile, "Error: program must end with period");
+            }
+        }
+        // Syntax error 2
+        else if (nextToken == 28 || nextToken == 29 || nextToken == 32) {
+            nextToken = fscanf(fp, "%d", &nextToken);
+            if (nextToken != 2) {
+                printf("Error: const, var, and read keywords must be followed by identifier");
+                fprintf(outputFile, "Error: const, var, and read keywords must be followed by identifier");
+            }
+        }
+        // Syntax error 3
         else if (nextToken == 2) {
             fscanf(fp, "%s", &identifier);
+            // TO-DO Check if symbol name has already been declared
+            // Call find function for symbol table
+            // Call insert function
         }
     }
     // TO-DO read through each token and check for potential errors as you read
