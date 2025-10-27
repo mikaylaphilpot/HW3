@@ -41,6 +41,82 @@ typedef struct {
 
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
+FILE *fp, *outputFile;
+int nextToken; 
+
+// Grammar Functions
+
+void program() {
+    block();
+}
+
+void block () {
+    if (nextToken == 28)
+        constDeclaration();
+    if (nextToken == 29)
+        varDeclaration();
+}
+
+void constDeclaration () {
+    char * identifier = malloc(sizeof(char)*12);
+    int value;
+    // loops because comma w/ more identifiers can occur 0 or more times
+    do { 
+        fscanf(fp, "%d", &nextToken);
+        // Syntax error 2
+        if (nextToken != 2) {
+            printf("Error: const, var, and read keywords must be followed by identifier\n");
+            fprintf(outputFile, "Error: const, var, and read keywords must be followed by identifier");
+            return; // find diff way to halt
+        }
+        fscanf(fp, "%s", identifier);
+        // Check if symbol name has already been declared
+        // Syntax error 3
+        if (findSymbol(identifier) != -1) {
+            printf("Error: symbol name has already been declared\n");
+            fprintf(outputFile, "Error: symbol name has already been declared");
+            return 1;
+        }
+        fscanf(fp, "%d", &nextToken);
+        // Syntax error 4
+        if(nextToken != 8) {
+            printf("Error: constants must be assigned with =\n");
+            fprintf(outputFile, "Error: constants must be assigned with =");
+            return 1;
+        }
+        // Syntax error 5
+        (fscanf(fp, "%d", &nextToken));
+        if (nextToken != 3) {
+            printf("Error: constants must be assigned an integer value\n");
+            fprintf(outputFile, "Error: constants must be assigned an integer value");
+            return 1;
+        }
+        fscanf(fp, "%d", &value);
+        // insert symbol name into table
+        for (int i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++) {
+            if(symbol_table[i].kind == 4) {
+                symbol_table[i].kind = 1;
+                strcpy(symbol_table[i].name, identifier);
+                symbol_table[i].val = value;
+                // TO-DO: set other symbol info
+                break;
+            }
+        }
+        fscanf(fp, "%d", &nextToken);
+    } while (nextToken == 16);
+
+        // Syntax error 6
+    if (nextToken != 17) {
+        printf("Error: constant and variable declarations must be followed by a semicolon\n");
+        fprintf(outputFile, "Error: constant and variable declarations must be followed by a semicolon");
+        return 1;
+    }
+}
+
+void varDeclaration () {
+
+}
+
 int findSymbol(char * identifier) {
     for(int i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++) {
         if(strcmp(symbol_table[i].name, identifier) == 0) {
@@ -77,11 +153,11 @@ int main (int argc, char *argv[])
 
     // Note: input file name is hardcoded
     // take input from lex.c output file
-    FILE *fp = fopen("tokens.txt", "r");
-    FILE *outputFile = fopen("elf.txt", "w");
-    
-    int nextToken = 0;
-    char * identifier = malloc(sizeof(char)*12);
+
+    fp = fopen("tokens.txt", "r");
+    outputFile = fopen("elf.txt", "w");
+    nextToken = 0;
+    /*char * identifier = malloc(sizeof(char)*12);
     int value; 
     // reading through each token in input file
     while(fscanf(fp, "%d", &nextToken) == 1) {
@@ -216,11 +292,10 @@ int main (int argc, char *argv[])
             }
 
         }
-
     }
     // TO-DO read through each token and check for potential errors as you read
     // Produce assembly code if no errors are found
     // Otherwise only the first error message should be produced, both in terminal and elf.txt
 
-    // TO-DO output to elf.txt file
+    // TO-DO output to elf.txt file*/
 }
