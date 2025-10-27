@@ -69,7 +69,7 @@ void program() {
     if (nextToken != 18) {
         error(1);
     }
-    exit();
+    exit(EXIT_SUCCESS);
 }
 
 void block () {
@@ -282,10 +282,6 @@ void printSymbolTable() {
     // To-Do: print actual content
 }
 
-// exit gracefully
-void exit() {
-
-}
 // called when there's an error
 void error (int errorNumber) {
     char * errors [16] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
@@ -295,7 +291,7 @@ void error (int errorNumber) {
         "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
     printf("%s\n", errors[errorNumber]);
     fprintf(outputFile, "%s\n", errors[errorNumber]);
-    exit();
+    exit(EXIT_FAILURE);
 }
 
 int main (int argc, char *argv[])
