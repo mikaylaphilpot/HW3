@@ -48,12 +48,15 @@ typedef struct {
 } symbol;
 
 typedef struct{
-    char OP;
+    int OP;
+    int L;
+    int M;
 
 } instruction;
 
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
+instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
 
 FILE *fp, *outputFile;
 int nextToken; 
@@ -143,7 +146,24 @@ int checkTable(char * identifier, int level) {
 
 int insertTable(int kind, char * identifier, int val, int level, int addr, int mark){
     if(checkTable(identifier, level) == -1 ){
-        symbol s1 = {kind, identifier, val, level, addr, mark};
+        symbol s1;
+        if (kind == 1){
+            s1.kind = kind;
+            strcpy(s1.name, identifier);
+            s1.val = val;
+            s1.level = level;
+            s1.mark = mark;
+        }
+        else if(kind = 2){
+            s1.kind = kind;
+            strcpy(s1.name, identifier);
+            s1.level = level;
+            s1.addr = addr;
+            s1.mark = mark;
+        }else{
+            printf("Procedure Called! Can't do.");
+        }
+             
         symbol_table[tp] = s1;
     }
     
