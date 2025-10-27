@@ -47,10 +47,17 @@ typedef struct {
     int mark; // to indicate unavailable or deleted
 } symbol;
 
+typedef struct{
+    char OP;
+
+} instruction;
+
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
+
 
 FILE *fp, *outputFile;
 int nextToken; 
+int tp;
 
 // Grammar Functions
 
@@ -125,13 +132,29 @@ void varDeclaration () {
 
 }
 
-int findSymbol(char * identifier) {
-    for(int i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++) {
-        if(strcmp(symbol_table[i].name, identifier) == 0) {
+int checkTable(char * identifier, int level) {
+    for(int i = tp; i > 0; i--) {
+        if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
             return i;
         }
     }
     return -1;
+}
+
+int insertTable(int kind, char * identifier, int val, int level, int addr, int mark){
+    if(checkTable(identifier, level) == -1 ){
+        symbol s1 = {kind, identifier, val, level, addr, mark};
+        symbol_table[tp] = s1;
+    }
+    
+}
+
+void deleteSymbol(char * identifier, int level){
+    for(int i = tp; i > 0; i--) {
+        if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
+            symbol_table[i].mark = 1;
+        }
+    }
 }
 
 void printAssemblyCode() {
@@ -155,16 +178,15 @@ int main (int argc, char *argv[])
         return 1;
     } 
 
-    for (int i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++) {
-        symbol_table[i].kind = 4;
-    }
-
     // Note: input file name is hardcoded
     // take input from lex.c output file
-
     fp = fopen("tokens.txt", "r");
     outputFile = fopen("elf.txt", "w");
+
+    //global variable declaration
     nextToken = 0;
+    tp = 1;
+
     /*char * identifier = malloc(sizeof(char)*12);
     int value; 
     // reading through each token in input file
