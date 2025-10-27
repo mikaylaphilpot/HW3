@@ -57,8 +57,7 @@ int cx = 0; // code index, increments by one each time an instruction is stored
 void program() {
     block();
     if (nextToken != 18) {
-        printf("Error: program must end with period\n");
-        fprintf(outputFile, "Error: program must end with period");
+        error(1);
     }
     exit();
 }
@@ -79,31 +78,23 @@ void constDeclaration () {
             fscanf(fp, "%d", &nextToken); // get next token
             // Syntax error 2
             if (nextToken != 2) {
-                printf("Error: const, var, and read keywords must be followed by identifier\n");
-                fprintf(outputFile, "Error: const, var, and read keywords must be followed by identifier");
-                return; // find diff way to halt
+                error(2);
             }
             fscanf(fp, "%s", identifier);
             // Check if symbol name has already been declared
             // Syntax error 3
             if (findSymbol(identifier) != -1) {
-                printf("Error: symbol name has already been declared\n");
-                fprintf(outputFile, "Error: symbol name has already been declared");
-                return 1;
+                error(3);
             }
             fscanf(fp, "%d", &nextToken);
             // Syntax error 4
             if(nextToken != 8) {
-                printf("Error: constants must be assigned with =\n");
-                fprintf(outputFile, "Error: constants must be assigned with =");
-                return 1;
+                error(4);
             }
             // Syntax error 5
             (fscanf(fp, "%d", &nextToken));
             if (nextToken != 3) {
-                printf("Error: constants must be assigned an integer value\n");
-                fprintf(outputFile, "Error: constants must be assigned an integer value");
-                return 1;
+                error(5);
             }
             fscanf(fp, "%d", &value);
             // insert symbol name into table
@@ -112,9 +103,7 @@ void constDeclaration () {
         } while (nextToken == 16);
         // Syntax error 6
         if (nextToken != 17) {
-            printf("Error: constant and variable declarations must be followed by a semicolon\n");
-            fprintf(outputFile, "Error: constant and variable declarations must be followed by a semicolon");
-            return 1;
+            error(6);
         }
         fscanf(fp, "%d", &nextToken);
     }
@@ -130,25 +119,19 @@ int varDeclaration () {
             fscanf(fp, "%d", &nextToken);
             // Syntax error 2
             if (nextToken != 2) {
-                printf("Error: const, var, and read keywords must be followed by identifier\n");
-                fprintf(outputFile, "Error: const, var, and read keywords must be followed by identifier");
-                return 0; // find diff way to halt
+                error(2);
             }
             fscanf(fp, "%s", identifier);
             // Syntax error 3
             if(findSymbol(identifier) != -1) {
-                printf("Error: symbol name has already been declared\n");
-                fprintf(outputFile, "Error: symbol name has already been declared");
-                return 1;
+                error(3);
             }
             insertSymbol(2, identifier, 0, 0, numVars + 2);
             fscanf(fp, "%d", &nextToken);
         } while(nextToken == 16);
 
         if (nextToken != 17) {
-            printf("Error: constant and variable declarations must be followed by a semicolon\n");
-            fprintf(outputFile, "Error: constant and variable declarations must be followed by a semicolon");
-            return 1;
+            error(6);
         }
         fscanf(fp, "%d", &nextToken);
     }
@@ -162,22 +145,16 @@ void statement () {
         int symIndex = findSymbol(nextToken);
         // Syntax error 7
         if (symIndex == -1) {
-            printf("Error: undeclared identifier\n");
-            fprintf(outputFile, "Error: undeclared identifier");
-            return 1;
+            error(7);
         }
         // Syntax error 8
         if (symbol_table[symIndex].kind != 2) {
-            printf("Error: only variable values may be altered\n");
-            fprintf(outputFile, "Error: only variable values may be altered");
-            return 1;
+            error(8);
         }
         fscanf(fp, "%d", &nextToken);
         // Syntax error 9
         if (nextToken != 19) {
-            printf("Error: assignment statements must use :=\n");
-            fprintf(outputFile, "Error: assignment statements must use :=");
-            return 1;
+            error(9);
         }
         fscanf(fp, "%d", &nextToken);
         expression();
@@ -191,9 +168,7 @@ void statement () {
         } while (nextToken == 17);
         // Syntax error 10
         if (nextToken != 21) {
-            printf("Error: begin must be followed by end\n");
-            fprintf(outputFile, "Error: begin must be followed by end");
-            return 1;
+            error(10);
         }
         fscanf(fp, "%d", &nextToken);
         return;
@@ -204,9 +179,7 @@ void statement () {
         int jpcIndex = cx;
         emit (8, 0, 0);
         if (nextToken != 24) {
-            printf("Error: if must be followed by then\n");
-            fprintf(outputFile, "Error: if must be followed by then");
-            return 1;
+            error(11);
         }
         fscanf(fp, "%d", &nextToken);
         statement();
@@ -218,9 +191,7 @@ void statement () {
         int loopIndex = cx;
         condition();
         if (nextToken != 26) {
-            printf("Error: while must be followed by do\n");
-            fprintf(outputFile, "Error: while must be followed by do");
-            return 1;
+            error(12);
         }
         fscanf(fp, "%d", &nextToken);
         int jpcIndex = cx;
@@ -233,21 +204,15 @@ void statement () {
     if (nextToken == 32) {
         fscanf(fp, "%d", &nextToken);
         if (nextToken != 2) {
-            printf("Error: const, var, and read keywords must be followed by identifier\n");
-            fprintf(outputFile, "Error: const, var, and read keywords must be followed by identifier");
-            return 1;
+            error(2);
         }
         fscanf(fp, "%s", identifier);
         int symIndex = findSymbol(identifier);
         if (symIndex == -1) {
-            printf("Error: undeclared identifier\n");
-            fprintf(outputFile, "Error: undeclared identifier");
-            return 1;
+            error(7);
         }
         if (symbol_table[symIndex].kind != 2) {
-            printf("Error: only variable values may be altered\n");
-            fprintf(outputFile, "Error: only variable values may be altered");
-            return 1;
+            error(8);
         }
         fscanf(fp, "%d", &nextToken);
         emit(3, 0, symbol_table[symIndex].addr);
@@ -300,6 +265,17 @@ void printSymbolTable() {
 // exit gracefully
 void exit() {
 
+}
+// called when there's an error
+void error (int errorNumber) {
+    char * errors [16] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
+        "Error: symbol name has already been declared", "Error: constants must be assigned with =", "Error: constants must be assigned an integer value", 
+        "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
+        "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
+        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
+    printf("%s\n", errors[errorNumber]);
+    fprintf(outputFile, "%s\n", errors[errorNumber]);
+    exit();
 }
 
 int main (int argc, char *argv[])
