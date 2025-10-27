@@ -1,4 +1,7 @@
-read poop
-read poop
+var x, y;
 begin
-end .
+if y <> x then
+write y
+fi;
+write x+ 1;
+end.

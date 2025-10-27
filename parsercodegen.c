@@ -1,18 +1,25 @@
 /*
 Assignment:
 HW3 - Parser and Code Generator for PL/0
+
 Author(s): Mikayla Philpot, Sindhuja Sesham
+
 Language: C (only)
+
 To Compile:
 Scanner:
 gcc -O2 -std=c11 -o lex lex.c
+
 Parser/Code Generator:
 gcc -O2 -std=c11 -o parsercodegen parsercodegen.c
+
 To Execute (on Eustis):
 ./lex tokens.txt
 ./parsercodegen
+
 where:
 tokens.txt is the path to the PL/0 source program
+
 Notes:
 - lex.c accepts ONE command-line argument (input PL/0 source file)
 - parsercodegen.c accepts NO command-line arguments
@@ -20,6 +27,7 @@ Notes:
 - Implements recursive-descent parser for PL/0 grammar
 - Generates PM/0 assembly code (see Appendix A for ISA)
 - All development and testing performed on Eustis
+
 Class: COP3402 - System Software - Fall 2025
 Instructor: Dr. Jie Lin
 Due Date: Friday, October 31, 2025 at 11:59 PM ET
@@ -48,8 +56,10 @@ typedef struct {
 instruction code[500];
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
+
 FILE *fp, *outputFile;
 int nextToken; 
+int tp;
 int cx = 0; // code index, increments by one each time an instruction is stored
 
 // Grammar Functions
@@ -235,20 +245,30 @@ void condition() {
 
 }
 
-int findSymbol(char * identifier) {
-    for(int i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++) {
-        if(strcmp(symbol_table[i].name, identifier) == 0) {
+int checkTable(char * identifier, int level) {
+    for(int i = tp; i > 0; i--) {
+        if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
             return i;
         }
     }
     return -1;
 }
 
-void insertSymbol (int kind, char * name, int value, int level, int memory);
+int insertTable(int kind, char * identifier, int val, int level, int addr, int mark){
+    if(checkTable(identifier, level) == -1 ){
+        symbol s1 = {kind, identifier, val, level, addr, mark};
+        symbol_table[tp] = s1;
+    }
+    
+}
 
-void deleteSymbol(char * name, int level);
-
-void emit(int OP, int L, int M);
+void deleteSymbol(char * identifier, int level){
+    for(int i = tp; i > 0; i--) {
+        if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
+            symbol_table[i].mark = 1;
+        }
+    }
+}
 
 void printAssemblyCode() {
     // To-Do: Figure out what parameters need to be passed
@@ -289,10 +309,13 @@ int main (int argc, char *argv[])
     emit(7, 0, 3);
     // Note: input file name is hardcoded
     // take input from lex.c output file
-
     fp = fopen("tokens.txt", "r");
     outputFile = fopen("elf.txt", "w");
+
+    //global variable declaration
     nextToken = 0;
+    tp = 1;
+
     program();
     /*char * identifier = malloc(sizeof(char)*12);
     int value; 
