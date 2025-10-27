@@ -317,6 +317,7 @@ int main (int argc, char *argv[])
     fp = fopen("tokens.txt", "r");
     outputFile = fopen("elf.txt", "w");
     nextToken = 0;
+    program();
     /*char * identifier = malloc(sizeof(char)*12);
     int value; 
     // reading through each token in input file
