@@ -214,7 +214,8 @@ void statement () {
         fscanf(fp, "%d", &nextToken);
         condition();
         int jpcIndex = cx;
-        emit (8, 0, 0);
+        // conditional jump to token 24
+        emit (8, 0, 24);
         if (nextToken != 24) {
             error(11);
         }
@@ -263,7 +264,7 @@ void statement () {
     if(nextToken == 31) {
         fscanf(fp, "%d", &nextToken);
         expression();
-        emit(0, 0, 0); // TO-DO: figure out what instructions write calls
+        emit(9, 0, 1); // TO-DO: figure out what instructions write calls
         return;
     }
 }
@@ -455,36 +456,7 @@ char * determineOpcode(int i) {
         return "LIT";
     }
     if (instructionSet[i].OP == 2) {
-        // determine which opcode 2 instruction to use based on M
-        if (instructionSet[i].M == 0)
-            return "RTN";
-        else if (instructionSet[i].M == 1)
-            return "ADD";
-        else if (instructionSet[i].M == 2)
-            return "SUB";
-        else if  (instructionSet[i].M == 3)
-            return "MUL";
-        else if  (instructionSet[i].M == 4)
-            return "DIV";
-        else if  (instructionSet[i].M == 5)
-            return "EQL";
-        else if  (instructionSet[i].M == 6)
-            return "NEQ";
-        else if  (instructionSet[i].M == 7) {
-            return "LSS";
-        }
-        else if  (instructionSet[i].M == 8) {
-            return "LEQ";
-        }
-        else if  (instructionSet[i].M == 9) {
-            return "GTR";
-        }
-        else if  (instructionSet[i].M == 10) {
-            return "GEQ";
-        }
-        else if  (instructionSet[i].M == 11) {
-            return "EVEN";
-        }
+        return "OPR";
     }
     else if (instructionSet[i].OP == 3) {
         return "LOD";
