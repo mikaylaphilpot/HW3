@@ -409,7 +409,7 @@ void printAssemblyCode() {
     printf("\nLine\tOP\tL\tM\n");
     for (int i = 0; i < cx; i++) {
         // print instruction name based on its opcode
-        printf("\n%s", determineOpcode(i));
+        printf("%s", determineOpcode(i));
         // Print L
         printf("\t%d", instructionSet[i].L);
         // Print M
@@ -455,6 +455,9 @@ char * determineOpcode(int i) {
         }
         else if  (instructionSet[i].M == 10) {
             return "\nGEQ";
+        }
+        else if  (instructionSet[i].M == 11) {
+            return "\nEVEN";
         }
     }
     else if (instructionSet[i].OP == 3) {
