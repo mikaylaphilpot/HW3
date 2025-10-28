@@ -318,7 +318,7 @@ void term(){
             factor();
             emit(2, 0, 3); //MUL
         }else{
-            scanf(fp, "%d", &nextToken);
+            fscanf(fp, "%d", &nextToken);
             factor();
             emit(2, 0, 4); //DIV
         }
@@ -327,7 +327,7 @@ void term(){
 }
 void factor(){
     if(nextToken == 2){
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
         int symIdx = findSymbol(nextToken); 
         if(symIdx == -1){
             error(7);
@@ -338,20 +338,20 @@ void factor(){
         else{
             emit(3, 0, symbol_table[symIdx].addr); //LOD 
         }
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
     }
     else if(nextToken == 3){
-        scanf(fp, "%d", &nextToken); // getting num value
+        fscanf(fp, "%d", &nextToken); // getting num value
         emit(1, 0, nextToken); //LIT
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
     }
     else if(nextToken == 14){
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
         expression();
         if(nextToken != 15){
             error(14);
         }
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
     }
     else{
         error(15); //TO-DO: check if correct error
