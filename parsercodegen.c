@@ -96,7 +96,7 @@ void program() {
     if (nextToken != 18) {
         error(1);
     }
-    exit(EXIT_SUCCESS);
+    emit(9, 0, 3); // emit halt
 }
 
 void block () {
@@ -150,7 +150,6 @@ int varDeclaration () {
     int numVars = 0;
     if (nextToken == 29) {
         char * identifier = malloc(sizeof(char)*12);
-        int value;
         do {
             numVars++;
             fscanf(fp, "%d", &nextToken);
@@ -170,15 +169,16 @@ int varDeclaration () {
         if (nextToken != 17) {
             error(6);
         }
-        fscanf(fp, "%d", &nextToken);
+        fscanf(fp, " %d ", &nextToken);
+
     }
     return numVars;
 }
 
 void statement () {
     char * identifier = malloc(sizeof(char)*12);
-    fscanf(fp, "%s", identifier);
     if (nextToken == 2) {
+        fscanf(fp, "%s", identifier);
         int symIndex = findSymbol(identifier);
         // Syntax error 7
         if (symIndex == -1) {
@@ -200,14 +200,14 @@ void statement () {
     }
     if(nextToken == 20) {
         do {
-            fscanf(fp, "%d", &nextToken);
+            fscanf(fp, " %d", &nextToken);
             statement();
         } while (nextToken == 17);
         // Syntax error 10
         if (nextToken != 21) {
             error(10);
         }
-        fscanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d ", &nextToken);
         return;
     }
     if(nextToken == 22) {
@@ -302,7 +302,7 @@ void condition() {
                 emit(2, 0, 10); //GEQ
             }
             else{
-                //codition error
+                //condition error
                 error(13);
             }
     }
@@ -428,8 +428,9 @@ void printAssemblyCode() {
     printf("Assembly code: \n\n");
     printf("\nLine\tOP\tL\tM\n");
     for (int i = 0; i < cx; i++) {
+        printf("\n%d", i);
         // print instruction name based on its opcode
-        printf("%s", determineOpcode(i));
+        printf("\t%s", determineOpcode(i));
         // Print L
         printf("\t%d", instructionSet[i].L);
         // Print M
@@ -446,62 +447,60 @@ void printSymbolTable() {
 char * determineOpcode(int i) {
     // determine instruction name based on its opcode
     if (instructionSet[i].OP == 1) {
-        return "\nLIT";
+        return "LIT";
     }
     if (instructionSet[i].OP == 2) {
         // determine which opcode 2 instruction to use based on M
         if (instructionSet[i].M == 0)
-            return "\nRTN";
+            return "RTN";
         else if (instructionSet[i].M == 1)
-            return "\nADD";
+            return "ADD";
         else if (instructionSet[i].M == 2)
-            return "\nSUB";
+            return "SUB";
         else if  (instructionSet[i].M == 3)
-            return "\nMUL";
+            return "MUL";
         else if  (instructionSet[i].M == 4)
-            return "\nDIV";
+            return "DIV";
         else if  (instructionSet[i].M == 5)
-            return "\nEQL";
+            return "EQL";
         else if  (instructionSet[i].M == 6)
-            return "\nNEQ";
+            return "NEQ";
         else if  (instructionSet[i].M == 7) {
-            return "\nLSS";
+            return "LSS";
         }
         else if  (instructionSet[i].M == 8) {
-            return "\nLEQ";
+            return "LEQ";
         }
         else if  (instructionSet[i].M == 9) {
-            return "\nGTR";
+            return "GTR";
         }
         else if  (instructionSet[i].M == 10) {
-            return "\nGEQ";
+            return "GEQ";
         }
         else if  (instructionSet[i].M == 11) {
-            return "\nEVEN";
+            return "EVEN";
         }
     }
     else if (instructionSet[i].OP == 3) {
-        return "\nLOD";
+        return "LOD";
     }
     else if (instructionSet[i].OP == 4) {
-        return "\nSTO";
+        return "STO";
     }
     else if (instructionSet[i].OP == 5) {
-        return "\nCAL";
+        return "CAL";
     }
     else if (instructionSet[i].OP == 6) {
-        return "\nINC";
+        return "INC";
 
     }
     else if (instructionSet[i].OP == 7) {
-        return "\nJMP";
+        return "JMP";
     }
     else if (instructionSet[i].OP == 8) {
-        return "\nJPC";
-    }
-    else if (instructionSet[i].OP == 9) {
-        return "\nSYS";
-    }
+        return "JPC";
+    }   
+    return "SYS";
 }
 
 // called when there's an error
@@ -534,8 +533,10 @@ int main (int argc, char *argv[])
     outputFile = fopen("elf.txt", "w");
 
     //global variable declaration
-    nextToken = 0;
+    fscanf(fp, "%d", &nextToken);
     tp = 1;
 
     program();
+    printAssemblyCode();
+    exit(EXIT_SUCCESS);
 }
