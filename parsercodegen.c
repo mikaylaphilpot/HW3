@@ -221,6 +221,10 @@ void statement () {
         fscanf(fp, "%d", &nextToken);
         statement();
         code[jpcIndex].M = cx;
+        // next token should be fi based on grammar but no error specified
+        if(nextToken == 23) {
+            fscanf(fp, "%d", &nextToken);
+        }
         return;
     }
     if(nextToken == 25) {
@@ -349,7 +353,6 @@ void factor(){
         fscanf(fp, "%s", identifier);
         int symIdx = findSymbol(identifier); 
         if(symIdx == -1){
-            printf("%s", identifier);
             error(7);
         }
         else if(symbol_table[symIdx].kind == 1){
