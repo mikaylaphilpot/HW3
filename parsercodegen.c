@@ -51,7 +51,6 @@ typedef struct{
     int OP;
     int L;
     int M;
-
 } instruction;
 
 instruction code[500];
@@ -59,7 +58,7 @@ symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
 
-FILE *fp, *outputFile;
+FILE *fp, *outputFile, *readFile;
 int nextToken; 
 int tp;
 int cx = 0; // code index, increments by one each time an instruction is stored
@@ -406,15 +405,80 @@ void deleteSymbol(char * identifier, int level){
 }
 
 void printAssemblyCode() {
-    // To-Do: Figure out what parameters need to be passed
-    // To-Do: Print Beginning and Format Output
-    // To-Do: print actual content
+    printf("Assembly code: \n\n");
+    printf("\nLine\tOP\tL\tM\n");
+    for (int i = 0; i < cx; i++) {
+        // print instruction name based on its opcode
+        printf("\n%s", determineOpcode(i));
+        // Print L
+        printf("\t%d", instructionSet[i].L);
+        // Print M
+        printf("\t%d", instructionSet[i].M);
+    }
 }
 
 void printSymbolTable() {
     // To-Do: Figure out what parameters need to be passed
     // To-Do: Print Beginning and Format Output
     // To-Do: print actual content
+}
+
+char * determineOpcode(int i) {
+    // determine instruction name based on its opcode
+    if (instructionSet[i].OP == 1) {
+        return "\nLIT";
+    }
+    if (instructionSet[i].OP == 2) {
+        // determine which opcode 2 instruction to use based on M
+        if (instructionSet[i].M == 0)
+            return "\nRTN";
+        else if (instructionSet[i].M == 1)
+            return "\nADD";
+        else if (instructionSet[i].M == 2)
+            return "\nSUB";
+        else if  (instructionSet[i].M == 3)
+            return "\nMUL";
+        else if  (instructionSet[i].M == 4)
+            return "\nDIV";
+        else if  (instructionSet[i].M == 5)
+            return "\nEQL";
+        else if  (instructionSet[i].M == 6)
+            return "\nNEQ";
+        else if  (instructionSet[i].M == 7) {
+            return "\nLSS";
+        }
+        else if  (instructionSet[i].M == 8) {
+            return "\nLEQ";
+        }
+        else if  (instructionSet[i].M == 9) {
+            return "\nGTR";
+        }
+        else if  (instructionSet[i].M == 10) {
+            return "\nGEQ";
+        }
+    }
+    else if (instructionSet[i].OP == 3) {
+        return "\nLOD";
+    }
+    else if (instructionSet[i].OP == 4) {
+        return "\nSTO";
+    }
+    else if (instructionSet[i].OP == 5) {
+        return "\nCAL";
+    }
+    else if (instructionSet[i].OP == 6) {
+        return "\nINC";
+
+    }
+    else if (instructionSet[i].OP == 7) {
+        return "\nJMP";
+    }
+    else if (instructionSet[i].OP == 8) {
+        return "\nJPC";
+    }
+    else if (instructionSet[i].OP == 9) {
+        return "\nSYS";
+    }
 }
 
 // called when there's an error
