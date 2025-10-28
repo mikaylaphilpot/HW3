@@ -1,1 +1,1 @@
-Error: symbol name has already been declared
+Error: program must end with period

@@ -63,6 +63,20 @@ int nextToken;
 int tp;
 int cx = 0; // code index, increments by one each time an instruction is stored
 
+void program();
+void block();
+void constDeclaration();
+int varDeclaration();
+void statement();
+void condition();
+void expression();
+void term();
+void factor();
+void error(int errorNum);
+char * determineOpcode(int i);
+int findSymbol(char *identifier);
+void insertSymbol(int kind,char* identifier, int val, int level, int addr, int makr);
+
 //Emit function
 void emit(int OP, int L, int M){
     instructionSet[cx].OP = OP;
@@ -161,7 +175,7 @@ void statement () {
     char * identifier = malloc(sizeof(char)*12);
     fscanf(fp, "%s", identifier);
     if (nextToken == 2) {
-        int symIndex = findSymbol(nextToken);
+        int symIndex = findSymbol(identifier);
         // Syntax error 7
         if (symIndex == -1) {
             error(7);
@@ -318,7 +332,7 @@ void term(){
             factor();
             emit(2, 0, 3); //MUL
         }else{
-            scanf(fp, "%d", &nextToken);
+            fscanf(fp, "%d", &nextToken);
             factor();
             emit(2, 0, 4); //DIV
         }
@@ -327,8 +341,9 @@ void term(){
 }
 void factor(){
     if(nextToken == 2){
-        scanf(fp, "%d", &nextToken);
-        int symIdx = findSymbol(nextToken); 
+        char *identifier = malloc(sizeof(char)*12);
+        fscanf(fp, "%s", identifier);
+        int symIdx = findSymbol(identifier); 
         if(symIdx == -1){
             error(7);
         }
@@ -338,20 +353,20 @@ void factor(){
         else{
             emit(3, 0, symbol_table[symIdx].addr); //LOD 
         }
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
     }
     else if(nextToken == 3){
-        scanf(fp, "%d", &nextToken); // getting num value
+        fscanf(fp, "%d", &nextToken); // getting num value
         emit(1, 0, nextToken); //LIT
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
     }
     else if(nextToken == 14){
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
         expression();
         if(nextToken != 15){
             error(14);
         }
-        scanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &nextToken);
     }
     else{
         error(15); //TO-DO: check if correct error
@@ -371,7 +386,7 @@ int findSymbol(char * identifier) {
     return -1;
 }
 
-int insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark){
+void insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark){
     if(findSymbol(identifier) == -1 ){
         symbol s1;
         if (kind == 1){
@@ -381,7 +396,7 @@ int insertSymbol(int kind, char * identifier, int val, int level, int addr, int 
             s1.level = level;
             s1.mark = mark;
         }
-        else if(kind = 2){
+        else if(kind == 2){
             s1.kind = kind;
             strcpy(s1.name, identifier);
             s1.level = level;
@@ -425,7 +440,7 @@ void printSymbolTable() {
 
     printf("Kind | Name \t | Value | Level | Address | Mark");
     for(int i = 0; i <= tp; i++){
-        printf("  %d | \t %s | %d | %d | %d | %d", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].addr, symbol_table[i].mark);
+        printf("  %d | \t %s | %d | %d | %d | %d", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
     }
 
 }
@@ -478,7 +493,6 @@ char * determineOpcode(int i) {
     }
     else if (instructionSet[i].OP == 6) {
         return "\nINC";
-
     }
     else if (instructionSet[i].OP == 7) {
         return "\nJMP";
@@ -498,7 +512,7 @@ void error (int errorNumber) {
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
         "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
-    outputFile = fclose("elf.txt");
+    fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");
     printf("%s\n", errors[errorNumber]);
