@@ -312,7 +312,6 @@ void condition() {
 void expression() {
 
     term();
-    fscanf(fp, "%d", &nextToken);
     while(nextToken == 4 || nextToken == 5){
         if(nextToken == 4){
             fscanf(fp, "%d", &nextToken);
@@ -350,6 +349,7 @@ void factor(){
         fscanf(fp, "%s", identifier);
         int symIdx = findSymbol(identifier); 
         if(symIdx == -1){
+            printf("%s", identifier);
             error(7);
         }
         else if(symbol_table[symIdx].kind == 1){
@@ -412,6 +412,7 @@ void insertSymbol(int kind, char * identifier, int val, int level, int addr, int
         }
              
         symbol_table[tp] = s1;
+        tp++;
     }
     
 }
@@ -421,6 +422,7 @@ void deleteSymbol(char * identifier, int level){
         if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
             symbol_table[i].mark = 1;
         }
+        tp--;
     }
 }
 
