@@ -326,9 +326,11 @@ void term(){
 
 }
 void factor(){
+    char * identifier = malloc(sizeof(char)*12);
+    int value; 
     if(nextToken == 2){
-        fscanf(fp, "%d", &nextToken);
-        int symIdx = findSymbol(nextToken); 
+        fscanf(fp, "%s", &identifier);
+        int symIdx = findSymbol(identifier); 
         if(symIdx == -1){
             error(7);
         }
@@ -341,8 +343,8 @@ void factor(){
         fscanf(fp, "%d", &nextToken);
     }
     else if(nextToken == 3){
-        fscanf(fp, "%d", &nextToken); // getting num value
-        emit(1, 0, nextToken); //LIT
+        fscanf(fp, "%d", &value); // getting num value
+        emit(1, 0, value); //LIT
         fscanf(fp, "%d", &nextToken);
     }
     else if(nextToken == 14){
