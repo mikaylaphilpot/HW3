@@ -81,7 +81,7 @@ void expression();
 void term();
 void factor();
 int findSymbol(char * identifier);
-void insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark);
+void insertSymbol(int kind, char * identifier, int val, int level, int addr);
 void deleteSymbol(char * identifier, int level);
 void printAssemblyCode();
 void printSymbolTable();
@@ -136,7 +136,7 @@ void constDeclaration () {
             }
             fscanf(fp, "%d", &value);
             // insert symbol name into table
-            insertSymbol(1, identifier, value, 0, 0, 0);
+            insertSymbol(1, identifier, value, 0, 0);
             getNextToken();
         } while (nextToken == 16);
         // Syntax error 6
@@ -163,7 +163,7 @@ int varDeclaration () {
             if(findSymbol(identifier) != -1) {
                 error(3);
             }
-            insertSymbol(2, identifier, 0, 0, numVars + 2, 0);
+            insertSymbol(2, identifier, 0, 0, numVars + 2);
             getNextToken();
         } while(nextToken == 16);
 
@@ -398,7 +398,7 @@ int findSymbol(char * identifier) {
     return -1;
 }
 
-void insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark){
+void insertSymbol(int kind, char * identifier, int val, int level, int addr){
     if(findSymbol(identifier) == -1 ){
         symbol s1;
         if (kind == 1){
@@ -406,14 +406,14 @@ void insertSymbol(int kind, char * identifier, int val, int level, int addr, int
             strcpy(s1.name, identifier);
             s1.val = val;
             s1.level = level;
-            s1.mark = mark;
+            s1.mark = 0;
         }
         else if(kind == 2){
             s1.kind = kind;
             strcpy(s1.name, identifier);
             s1.level = level;
             s1.addr = addr;
-            s1.mark = mark;
+            s1.mark = 0;
         }else{
             printf("Procedure Called! Can't do.");
         }
