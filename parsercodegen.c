@@ -70,6 +70,24 @@ void emit(int OP, int L, int M){
     instructionSet[cx].M = M;
     cx++;
 }
+// Function Prototypes
+void program();
+void block();
+void constDeclaration();
+int varDeclaration();
+void statement();
+void condition(); 
+void expression();
+void term();
+void factor();
+int findSymbol(char * identifier);
+void insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark);
+void deleteSymbol(char * identifier, int level);
+void printAssemblyCode();
+void printSymbolTable();
+char * determineOpcode(int i);
+void error (int errorNumber);
+
 
 // Grammar Functions
 
@@ -161,7 +179,7 @@ void statement () {
     char * identifier = malloc(sizeof(char)*12);
     fscanf(fp, "%s", identifier);
     if (nextToken == 2) {
-        int symIndex = findSymbol(nextToken);
+        int symIndex = findSymbol(identifier);
         // Syntax error 7
         if (symIndex == -1) {
             error(7);
@@ -329,7 +347,7 @@ void factor(){
     char * identifier = malloc(sizeof(char)*12);
     int value; 
     if(nextToken == 2){
-        fscanf(fp, "%s", &identifier);
+        fscanf(fp, "%s", identifier);
         int symIdx = findSymbol(identifier); 
         if(symIdx == -1){
             error(7);
@@ -373,7 +391,7 @@ int findSymbol(char * identifier) {
     return -1;
 }
 
-int insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark){
+void insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark){
     if(findSymbol(identifier) == -1 ){
         symbol s1;
         if (kind == 1){
@@ -383,7 +401,7 @@ int insertSymbol(int kind, char * identifier, int val, int level, int addr, int 
             s1.level = level;
             s1.mark = mark;
         }
-        else if(kind = 2){
+        else if(kind == 2){
             s1.kind = kind;
             strcpy(s1.name, identifier);
             s1.level = level;
@@ -493,7 +511,7 @@ void error (int errorNumber) {
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
         "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
-    outputFile = fclose("elf.txt");
+    int closed = fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");
     printf("%s\n", errors[errorNumber]);
