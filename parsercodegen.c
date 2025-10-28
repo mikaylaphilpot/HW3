@@ -442,6 +442,7 @@ void printAssemblyCode() {
         // Print M
         printf("\t%d", instructionSet[i].M);
     }
+    printf("\n");
 }
 
 void printSymbolTable() {
