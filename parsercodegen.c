@@ -66,15 +66,11 @@ int cx = 0; // code index, increments by one each time an instruction is stored
 
 //Emit function
 void emit(int OP, int L, int M){
-    if(cx > 25){
-        error(25);
-    }
-    else{
-        instructionSet[cx].OP = OP;
-        instructionSet[cx].L = L;
-        instructionSet[cx].M = M;
-        cx++;
-    }
+
+    instructionSet[cx].OP = OP;
+    instructionSet[cx].L = L;
+    instructionSet[cx].M = M;
+    cx++;
 }
 
 // Grammar Functions
