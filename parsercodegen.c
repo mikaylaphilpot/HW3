@@ -289,6 +289,9 @@ void error (int errorNumber) {
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
         "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
+    outputFile = fclose("elf.txt");
+    // closing and re-opening the output file clears all previous printed text
+    outputFile = fopen("elf.txt", "w");
     printf("%s\n", errors[errorNumber]);
     fprintf(outputFile, "%s\n", errors[errorNumber]);
     exit(EXIT_FAILURE);
