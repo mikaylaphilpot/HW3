@@ -416,6 +416,13 @@ void printSymbolTable() {
     // To-Do: Figure out what parameters need to be passed
     // To-Do: Print Beginning and Format Output
     // To-Do: print actual content
+    printf("Symbole Table:\n\n");
+
+    printf("Kind | Name \t | Value | Level | Address | Mark");
+    for(int i = 0; i <= tp; i++){
+        printf("  %d | \t %s | %d | %d | %d | %d", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].addr, symbol_table[i].mark);
+    }
+
 }
 
 // called when there's an error
