@@ -64,6 +64,19 @@ int nextToken;
 int tp;
 int cx = 0; // code index, increments by one each time an instruction is stored
 
+//Emit function
+void emit(int OP, int L, int M){
+    if(cx > 25){
+        error(25);
+    }
+    else{
+        instructionSet[cx].OP = OP;
+        instructionSet[cx].L = L;
+        instructionSet[cx].M = M;
+        cx++;
+    }
+}
+
 // Grammar Functions
 
 void program() {
@@ -110,7 +123,7 @@ void constDeclaration () {
             }
             fscanf(fp, "%d", &value);
             // insert symbol name into table
-            insertSymbol(1, identifier, value, 0, 0);
+            insertSymbol(1, identifier, value, 0, 0, 0);
             fscanf(fp, "%d", &nextToken);
         } while (nextToken == 16);
         // Syntax error 6
@@ -138,7 +151,7 @@ int varDeclaration () {
             if(findSymbol(identifier) != -1) {
                 error(3);
             }
-            insertSymbol(2, identifier, 0, 0, numVars + 2);
+            insertSymbol(2, identifier, 0, 0, numVars + 2, 0);
             fscanf(fp, "%d", &nextToken);
         } while(nextToken == 16);
 
@@ -239,25 +252,133 @@ void statement () {
     }
 }
 
+void condition() { 
+    if(nextToken == 34){
+        fscanf(fp, "%d", &nextToken);
+        expression();
+        emit(2, 0, 11); //EVEN
+    }else{
+        expression();
+            if(nextToken == 8){
+                fscanf(fp, "%d", &nextToken);
+                expression();
+                emit(2, 0, 5); //EQl
+            }
+            else if(nextToken == 9){
+                fscanf(fp, "%d", &nextToken);
+                expression();
+                emit(2, 0, 6); //NEQ
+            }
+            else if(nextToken == 10){
+                fscanf(fp, "%d", &nextToken);
+                expression();
+                emit(2, 0, 7); //LSS
+            }
+            else if(nextToken == 11){
+                fscanf(fp, "%d", &nextToken);
+                expression();
+                emit(2, 0, 8); //LEQ
+            }
+            else if(nextToken == 12){
+                fscanf(fp, "%d", &nextToken);
+                expression();
+                emit(2, 0, 9); //GTR
+            }
+            else if(nextToken == 13){
+                fscanf(fp, "%d", &nextToken);
+                expression();
+                emit(2, 0, 10); //GEQ
+            }
+            else{
+                //codition error
+                error(13);
+            }
+    }
+    
+}
+
 void expression() {
 
+    term();
+    fscanf(fp, "%d", &nextToken);
+    while(nextToken == 4 || nextToken == 5){
+        if(nextToken == 4){
+            fscanf(fp, "%d", &nextToken);
+            term();
+            emit(2, 0, 1); //ADD
+        }
+        else{
+            fscanf(fp, "%d", &nextToken);
+            term();
+            emit(2, 0, 2); //SUB
+        }
+    }
+
 }
 
-void condition() {
+void term(){
+    factor();
+    while(nextToken == 6 || nextToken == 7){
+        if(nextToken == 6){
+            fscanf(fp, "%d", &nextToken);
+            factor();
+            emit(2, 0, 3); //MUL
+        }else{
+            scanf(fp, "%d", &nextToken);
+            factor();
+            emit(2, 0, 4); //DIV
+        }
+    }
+
+}
+void factor(){
+    if(nextToken == 2){
+        scanf(fp, "%d", &nextToken);
+        int symIdx = findSymbol(nextToken); 
+        if(symIdx == -1){
+            error(7);
+        }
+        else if(symbol_table[symIdx].kind == 1){
+            emit(1, 0, symbol_table[symIdx].val); //LIT 
+        }
+        else{
+            emit(3, 0, symbol_table[symIdx].addr); //LOD 
+        }
+        scanf(fp, "%d", &nextToken);
+    }
+    else if(nextToken == 3){
+        scanf(fp, "%d", &nextToken); // getting num value
+        emit(1, 0, nextToken); //LIT
+        scanf(fp, "%d", &nextToken);
+    }
+    else if(nextToken == 14){
+        scanf(fp, "%d", &nextToken);
+        expression();
+        if(nextToken != 15){
+            error(14);
+        }
+        scanf(fp, "%d", &nextToken);
+    }
+    else{
+        error(15); //TO-DO: check if correct error
+    }
 
 }
 
-int checkTable(char * identifier, int level) {
+//SYMBOL TABLE FUNCTIONS
+
+//&& symbol_table[i].level == level no level check 
+int findSymbol(char * identifier) {
     for(int i = tp; i > 0; i--) {
-        if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
+        if(strcmp(symbol_table[i].name, identifier) == 0) {
             return i;
         }
     }
     return -1;
 }
 
-int insertTable(int kind, char * identifier, int val, int level, int addr, int mark){
-    if(checkTable(identifier, level) == -1 ){
+int insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark){
+    if(findSymbol(identifier) == -1 ){
         symbol s1;
         if (kind == 1){
             s1.kind = kind;
