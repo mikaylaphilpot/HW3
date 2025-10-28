@@ -54,6 +54,7 @@ typedef struct{
 
 } instruction;
 
+instruction code[500];
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
@@ -61,77 +62,188 @@ instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
 FILE *fp, *outputFile;
 int nextToken; 
 int tp;
+int cx = 0; // code index, increments by one each time an instruction is stored
 
 // Grammar Functions
 
 void program() {
     block();
+    if (nextToken != 18) {
+        error(1);
+    }
+    exit(EXIT_SUCCESS);
 }
 
 void block () {
-    if (nextToken == 28)
-        constDeclaration();
-    if (nextToken == 29)
-        varDeclaration();
+    constDeclaration();
+    int numsVars = varDeclaration();
+    emit(6, 0, 3 + numsVars);
+    statement();
 }
 
 void constDeclaration () {
-    char * identifier = malloc(sizeof(char)*12);
-    int value;
-    // loops because comma w/ more identifiers can occur 0 or more times
-    do { 
-        fscanf(fp, "%d", &nextToken);
-        // Syntax error 2
-        if (nextToken != 2) {
-            printf("Error: const, var, and read keywords must be followed by identifier\n");
-            fprintf(outputFile, "Error: const, var, and read keywords must be followed by identifier");
-            return; // find diff way to halt
-        }
-        fscanf(fp, "%s", identifier);
-        // Check if symbol name has already been declared
-        // Syntax error 3
-        if (findSymbol(identifier) != -1) {
-            printf("Error: symbol name has already been declared\n");
-            fprintf(outputFile, "Error: symbol name has already been declared");
-            return 1;
-        }
-        fscanf(fp, "%d", &nextToken);
-        // Syntax error 4
-        if(nextToken != 8) {
-            printf("Error: constants must be assigned with =\n");
-            fprintf(outputFile, "Error: constants must be assigned with =");
-            return 1;
-        }
-        // Syntax error 5
-        (fscanf(fp, "%d", &nextToken));
-        if (nextToken != 3) {
-            printf("Error: constants must be assigned an integer value\n");
-            fprintf(outputFile, "Error: constants must be assigned an integer value");
-            return 1;
-        }
-        fscanf(fp, "%d", &value);
-        // insert symbol name into table
-        for (int i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++) {
-            if(symbol_table[i].kind == 4) {
-                symbol_table[i].kind = 1;
-                strcpy(symbol_table[i].name, identifier);
-                symbol_table[i].val = value;
-                // TO-DO: set other symbol info
-                break;
+    if(nextToken == 28) {
+        char * identifier = malloc(sizeof(char)*12);
+        int value;
+        // loops because comma w/ more identifiers can occur 0 or more times
+        do { 
+            fscanf(fp, "%d", &nextToken); // get next token
+            // Syntax error 2
+            if (nextToken != 2) {
+                error(2);
             }
+            fscanf(fp, "%s", identifier);
+            // Check if symbol name has already been declared
+            // Syntax error 3
+            if (findSymbol(identifier) != -1) {
+                error(3);
+            }
+            fscanf(fp, "%d", &nextToken);
+            // Syntax error 4
+            if(nextToken != 8) {
+                error(4);
+            }
+            // Syntax error 5
+            (fscanf(fp, "%d", &nextToken));
+            if (nextToken != 3) {
+                error(5);
+            }
+            fscanf(fp, "%d", &value);
+            // insert symbol name into table
+            insertSymbol(1, identifier, value, 0, 0);
+            fscanf(fp, "%d", &nextToken);
+        } while (nextToken == 16);
+        // Syntax error 6
+        if (nextToken != 17) {
+            error(6);
         }
         fscanf(fp, "%d", &nextToken);
-    } while (nextToken == 16);
-
-        // Syntax error 6
-    if (nextToken != 17) {
-        printf("Error: constant and variable declarations must be followed by a semicolon\n");
-        fprintf(outputFile, "Error: constant and variable declarations must be followed by a semicolon");
-        return 1;
     }
 }
 
-void varDeclaration () {
+int varDeclaration () {
+    int numVars = 0;
+    if (nextToken == 29) {
+        char * identifier = malloc(sizeof(char)*12);
+        int value;
+        do {
+            numVars++;
+            fscanf(fp, "%d", &nextToken);
+            // Syntax error 2
+            if (nextToken != 2) {
+                error(2);
+            }
+            fscanf(fp, "%s", identifier);
+            // Syntax error 3
+            if(findSymbol(identifier) != -1) {
+                error(3);
+            }
+            insertSymbol(2, identifier, 0, 0, numVars + 2);
+            fscanf(fp, "%d", &nextToken);
+        } while(nextToken == 16);
+
+        if (nextToken != 17) {
+            error(6);
+        }
+        fscanf(fp, "%d", &nextToken);
+    }
+    return numVars;
+}
+
+void statement () {
+    char * identifier = malloc(sizeof(char)*12);
+    fscanf(fp, "%s", identifier);
+    if (nextToken == 2) {
+        int symIndex = findSymbol(nextToken);
+        // Syntax error 7
+        if (symIndex == -1) {
+            error(7);
+        }
+        // Syntax error 8
+        if (symbol_table[symIndex].kind != 2) {
+            error(8);
+        }
+        fscanf(fp, "%d", &nextToken);
+        // Syntax error 9
+        if (nextToken != 19) {
+            error(9);
+        }
+        fscanf(fp, "%d", &nextToken);
+        expression();
+        emit(4, 0, symbol_table[symIndex].addr);
+        return;
+    }
+    if(nextToken == 20) {
+        do {
+            fscanf(fp, "%d", &nextToken);
+            statement();
+        } while (nextToken == 17);
+        // Syntax error 10
+        if (nextToken != 21) {
+            error(10);
+        }
+        fscanf(fp, "%d", &nextToken);
+        return;
+    }
+    if(nextToken == 22) {
+        fscanf(fp, "%d", &nextToken);
+        condition();
+        int jpcIndex = cx;
+        emit (8, 0, 0);
+        if (nextToken != 24) {
+            error(11);
+        }
+        fscanf(fp, "%d", &nextToken);
+        statement();
+        code[jpcIndex].M = cx;
+        return;
+    }
+    if(nextToken == 25) {
+        fscanf(fp, "%d", &nextToken);
+        int loopIndex = cx;
+        condition();
+        if (nextToken != 26) {
+            error(12);
+        }
+        fscanf(fp, "%d", &nextToken);
+        int jpcIndex = cx;
+        emit (8, 0, 0);
+        statement();
+        emit(7, 0, loopIndex);
+        code[jpcIndex].M = cx;
+        return;
+    }
+    if (nextToken == 32) {
+        fscanf(fp, "%d", &nextToken);
+        if (nextToken != 2) {
+            error(2);
+        }
+        fscanf(fp, "%s", identifier);
+        int symIndex = findSymbol(identifier);
+        if (symIndex == -1) {
+            error(7);
+        }
+        if (symbol_table[symIndex].kind != 2) {
+            error(8);
+        }
+        fscanf(fp, "%d", &nextToken);
+        emit(3, 0, symbol_table[symIndex].addr);
+        emit(4, 0, symbol_table[symIndex].addr); // TO-DO: figure out/verify what instructions read calls
+        return;
+    }
+    if(nextToken == 31) {
+        fscanf(fp, "%d", &nextToken);
+        expression();
+        emit(0, 0, 0); // TO-DO: figure out what instructions write calls
+        return;
+    }
+}
+
+void expression() {
+
+}
+
+void condition() {
 
 }
 
@@ -189,6 +301,17 @@ void printSymbolTable() {
     // To-Do: print actual content
 }
 
+// called when there's an error
+void error (int errorNumber) {
+    char * errors [16] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
+        "Error: symbol name has already been declared", "Error: constants must be assigned with =", "Error: constants must be assigned an integer value", 
+        "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
+        "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
+        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
+    printf("%s\n", errors[errorNumber]);
+    fprintf(outputFile, "%s\n", errors[errorNumber]);
+    exit(EXIT_FAILURE);
+}
 
 int main (int argc, char *argv[])
 {
@@ -198,6 +321,7 @@ int main (int argc, char *argv[])
         return 1;
     } 
 
+    emit(7, 0, 3);
     // Note: input file name is hardcoded
     // take input from lex.c output file
     fp = fopen("tokens.txt", "r");
@@ -207,6 +331,7 @@ int main (int argc, char *argv[])
     nextToken = 0;
     tp = 1;
 
+    program();
     /*char * identifier = malloc(sizeof(char)*12);
     int value; 
     // reading through each token in input file

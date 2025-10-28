@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/mikaylaphilpot/Desktop/coding/cop3402/HW3/output/lex'
+relocations:     []
+...
