@@ -530,7 +530,7 @@ void error (int errorNumber) {
         "Error: symbol name has already been declared", "Error: constants must be assigned with =", "Error: constants must be assigned an integer value", 
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
-        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length","Error: REPLACE", "Error: can't access symbol because mark set to one", "Error: program doesn't handle procedures"};
+        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length", "Error: can't access symbol because mark set to one", "Error: program doesn't handle procedures"};
     fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");
