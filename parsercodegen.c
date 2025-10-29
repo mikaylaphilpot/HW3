@@ -53,7 +53,6 @@ typedef struct{
     int M;
 } instruction;
 
-instruction code[500];
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
@@ -220,14 +219,13 @@ void statement () {
         getNextToken();
         condition();
         int jpcIndex = cx;
-        // conditional jump to token 24
-        emit (8, 0, 24);
+        emit (8, 0, 0);
         if (nextToken != 24) {
             error(11);
         }
         getNextToken();
         statement();
-        code[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx;
         // next token should be fi based on grammar but no error specified
         if(nextToken == 23) {
             getNextToken();
@@ -243,10 +241,10 @@ void statement () {
         }
         getNextToken();
         int jpcIndex = cx;
-        emit (8, 0, 26);
+        emit (8, 0, 0);
         statement();
         emit(7, 0, loopIndex);
-        code[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx;
         return;
     }
     if (nextToken == 32) {
