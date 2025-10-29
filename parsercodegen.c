@@ -239,7 +239,7 @@ void statement () {
         }
         getNextToken();
         int jpcIndex = cx;
-        emit (8, 0, 0);
+        emit (8, 0, 26);
         statement();
         emit(7, 0, loopIndex);
         code[jpcIndex].M = cx;
@@ -444,6 +444,11 @@ void printAssemblyCode() {
         printf("\t%d", instructionSet[i].L);
         // Print M
         printf("\t%d", instructionSet[i].M);
+
+        // printing to file
+        fprintf(outputFile, "%d", instructionSet[i].OP);
+        fprintf(outputFile, " %d", instructionSet[i].L);
+        fprintf(outputFile, " %d\n", instructionSet[i].M);
     }
     printf("\n");
 }
