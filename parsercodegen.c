@@ -84,6 +84,25 @@ void emit(int OP, int L, int M){
     instructionSet[cx].M = M;
     cx++;
 }
+// Function Prototypes
+void program();
+void block();
+void constDeclaration();
+int varDeclaration();
+void statement();
+void condition(); 
+void expression();
+void term();
+void factor();
+int findSymbol(char * identifier);
+void insertSymbol(int kind, char * identifier, int val, int level, int addr, int mark);
+void deleteSymbol(char * identifier, int level);
+void printAssemblyCode();
+void printSymbolTable();
+char * determineOpcode(int i);
+void error (int errorNumber);
+void getNextToken();
+
 
 // Grammar Functions
 
@@ -92,7 +111,7 @@ void program() {
     if (nextToken != 18) {
         error(1);
     }
-    exit(EXIT_SUCCESS);
+    emit(9, 0, 3); // emit halt
 }
 
 void block () {
@@ -108,7 +127,7 @@ void constDeclaration () {
         int value;
         // loops because comma w/ more identifiers can occur 0 or more times
         do { 
-            fscanf(fp, "%d", &nextToken); // get next token
+            getNextToken(); // get next token
             // Syntax error 2
             if (nextToken != 2) {
                 error(2);
@@ -119,7 +138,7 @@ void constDeclaration () {
             if (findSymbol(identifier) != -1) {
                 error(3);
             }
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
             // Syntax error 4
             if(nextToken != 8) {
                 error(4);
@@ -132,13 +151,13 @@ void constDeclaration () {
             fscanf(fp, "%d", &value);
             // insert symbol name into table
             insertSymbol(1, identifier, value, 0, 0, 0);
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
         } while (nextToken == 16);
         // Syntax error 6
         if (nextToken != 17) {
             error(6);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
     }
 }
 
@@ -146,10 +165,9 @@ int varDeclaration () {
     int numVars = 0;
     if (nextToken == 29) {
         char * identifier = malloc(sizeof(char)*12);
-        int value;
         do {
             numVars++;
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
             // Syntax error 2
             if (nextToken != 2) {
                 error(2);
@@ -160,21 +178,23 @@ int varDeclaration () {
                 error(3);
             }
             insertSymbol(2, identifier, 0, 0, numVars + 2, 0);
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
         } while(nextToken == 16);
 
         if (nextToken != 17) {
             error(6);
         }
-        fscanf(fp, "%d", &nextToken);
+        fscanf(fp, " %d ", &nextToken);
+
     }
     return numVars;
 }
 
 void statement () {
     char * identifier = malloc(sizeof(char)*12);
-    fscanf(fp, "%s", identifier);
     if (nextToken == 2) {
+        fscanf(fp, "%s", identifier);
+        
         int symIndex = findSymbol(identifier);
         // Syntax error 7
         if (symIndex == -1) {
@@ -184,49 +204,54 @@ void statement () {
         if (symbol_table[symIndex].kind != 2) {
             error(8);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         // Syntax error 9
         if (nextToken != 19) {
             error(9);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         expression();
         emit(4, 0, symbol_table[symIndex].addr);
         return;
     }
     if(nextToken == 20) {
         do {
-            fscanf(fp, "%d", &nextToken);
+            fscanf(fp, " %d", &nextToken);
             statement();
         } while (nextToken == 17);
         // Syntax error 10
         if (nextToken != 21) {
             error(10);
         }
-        fscanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d ", &nextToken);
         return;
     }
     if(nextToken == 22) {
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         condition();
         int jpcIndex = cx;
-        emit (8, 0, 0);
+        // conditional jump to token 24
+        emit (8, 0, 24);
         if (nextToken != 24) {
             error(11);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         statement();
         code[jpcIndex].M = cx;
+        // next token should be fi based on grammar but no error specified
+        if(nextToken == 23) {
+            getNextToken();
+        }
         return;
     }
     if(nextToken == 25) {
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         int loopIndex = cx;
         condition();
         if (nextToken != 26) {
             error(12);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         int jpcIndex = cx;
         emit (8, 0, 0);
         statement();
@@ -235,7 +260,7 @@ void statement () {
         return;
     }
     if (nextToken == 32) {
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         if (nextToken != 2) {
             error(2);
         }
@@ -247,58 +272,58 @@ void statement () {
         if (symbol_table[symIndex].kind != 2) {
             error(8);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         emit(3, 0, symbol_table[symIndex].addr);
         emit(4, 0, symbol_table[symIndex].addr); // TO-DO: figure out/verify what instructions read calls
         return;
     }
     if(nextToken == 31) {
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         expression();
-        emit(0, 0, 0); // TO-DO: figure out what instructions write calls
+        emit(9, 0, 1); // TO-DO: figure out what instructions write calls
         return;
     }
 }
 
 void condition() { 
     if(nextToken == 34){
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         expression();
         emit(2, 0, 11); //EVEN
     }else{
         expression();
             if(nextToken == 8){
-                fscanf(fp, "%d", &nextToken);
+                getNextToken();
                 expression();
                 emit(2, 0, 5); //EQl
             }
             else if(nextToken == 9){
-                fscanf(fp, "%d", &nextToken);
+                getNextToken();
                 expression();
                 emit(2, 0, 6); //NEQ
             }
             else if(nextToken == 10){
-                fscanf(fp, "%d", &nextToken);
+                getNextToken();
                 expression();
                 emit(2, 0, 7); //LSS
             }
             else if(nextToken == 11){
-                fscanf(fp, "%d", &nextToken);
+                getNextToken();
                 expression();
                 emit(2, 0, 8); //LEQ
             }
             else if(nextToken == 12){
-                fscanf(fp, "%d", &nextToken);
+                getNextToken();
                 expression();
                 emit(2, 0, 9); //GTR
             }
             else if(nextToken == 13){
-                fscanf(fp, "%d", &nextToken);
+                getNextToken();
                 expression();
                 emit(2, 0, 10); //GEQ
             }
             else{
-                //codition error
+                //condition error
                 error(13);
             }
     }
@@ -308,15 +333,14 @@ void condition() {
 void expression() {
 
     term();
-    fscanf(fp, "%d", &nextToken);
     while(nextToken == 4 || nextToken == 5){
         if(nextToken == 4){
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
             term();
             emit(2, 0, 1); //ADD
         }
         else{
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
             term();
             emit(2, 0, 2); //SUB
         }
@@ -328,11 +352,11 @@ void term(){
     factor();
     while(nextToken == 6 || nextToken == 7){
         if(nextToken == 6){
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
             factor();
             emit(2, 0, 3); //MUL
         }else{
-            fscanf(fp, "%d", &nextToken);
+            getNextToken();
             factor();
             emit(2, 0, 4); //DIV
         }
@@ -340,12 +364,14 @@ void term(){
 
 }
 void factor(){
+    char * identifier = malloc(sizeof(char)*12);
+    int value; 
     if(nextToken == 2){
-        char *identifier = malloc(sizeof(char)*12);
         fscanf(fp, "%s", identifier);
         int symIdx = findSymbol(identifier); 
         if(symIdx == -1){
             error(7);
+            
         }
         else if(symbol_table[symIdx].kind == 1){
             emit(1, 0, symbol_table[symIdx].val); //LIT 
@@ -353,20 +379,20 @@ void factor(){
         else{
             emit(3, 0, symbol_table[symIdx].addr); //LOD 
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
     }
     else if(nextToken == 3){
-        fscanf(fp, "%d", &nextToken); // getting num value
-        emit(1, 0, nextToken); //LIT
-        fscanf(fp, "%d", &nextToken);
+        fscanf(fp, "%d", &value); // getting num value
+        emit(1, 0, value); //LIT
+        getNextToken();
     }
     else if(nextToken == 14){
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
         expression();
         if(nextToken != 15){
             error(14);
         }
-        fscanf(fp, "%d", &nextToken);
+        getNextToken();
     }
     else{
         error(15); //TO-DO: check if correct error
@@ -407,6 +433,7 @@ void insertSymbol(int kind, char * identifier, int val, int level, int addr, int
         }
              
         symbol_table[tp] = s1;
+        tp++;
     }
     
 }
@@ -416,6 +443,7 @@ void deleteSymbol(char * identifier, int level){
         if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
             symbol_table[i].mark = 1;
         }
+        tp--;
     }
 }
 
@@ -423,13 +451,15 @@ void printAssemblyCode() {
     printf("Assembly code: \n\n");
     printf("\nLine\tOP\tL\tM\n");
     for (int i = 0; i < cx; i++) {
+        printf("\n%d", i);
         // print instruction name based on its opcode
-        printf("%s", determineOpcode(i));
+        printf("\t%s", determineOpcode(i));
         // Print L
         printf("\t%d", instructionSet[i].L);
         // Print M
         printf("\t%d", instructionSet[i].M);
     }
+    printf("\n");
 }
 
 void printSymbolTable() {
@@ -448,60 +478,37 @@ void printSymbolTable() {
 char * determineOpcode(int i) {
     // determine instruction name based on its opcode
     if (instructionSet[i].OP == 1) {
-        return "\nLIT";
+        return "LIT";
     }
     if (instructionSet[i].OP == 2) {
-        // determine which opcode 2 instruction to use based on M
-        if (instructionSet[i].M == 0)
-            return "\nRTN";
-        else if (instructionSet[i].M == 1)
-            return "\nADD";
-        else if (instructionSet[i].M == 2)
-            return "\nSUB";
-        else if  (instructionSet[i].M == 3)
-            return "\nMUL";
-        else if  (instructionSet[i].M == 4)
-            return "\nDIV";
-        else if  (instructionSet[i].M == 5)
-            return "\nEQL";
-        else if  (instructionSet[i].M == 6)
-            return "\nNEQ";
-        else if  (instructionSet[i].M == 7) {
-            return "\nLSS";
-        }
-        else if  (instructionSet[i].M == 8) {
-            return "\nLEQ";
-        }
-        else if  (instructionSet[i].M == 9) {
-            return "\nGTR";
-        }
-        else if  (instructionSet[i].M == 10) {
-            return "\nGEQ";
-        }
-        else if  (instructionSet[i].M == 11) {
-            return "\nEVEN";
-        }
+        return "OPR";
     }
     else if (instructionSet[i].OP == 3) {
-        return "\nLOD";
+        return "LOD";
     }
     else if (instructionSet[i].OP == 4) {
-        return "\nSTO";
+        return "STO";
     }
     else if (instructionSet[i].OP == 5) {
-        return "\nCAL";
+        return "CAL";
     }
     else if (instructionSet[i].OP == 6) {
-        return "\nINC";
+        return "INC";
+
     }
     else if (instructionSet[i].OP == 7) {
-        return "\nJMP";
+        return "JMP";
     }
     else if (instructionSet[i].OP == 8) {
-        return "\nJPC";
-    }
-    else if (instructionSet[i].OP == 9) {
-        return "\nSYS";
+        return "JPC";
+    }   
+    return "SYS";
+}
+
+void getNextToken () {
+    fscanf(fp, "%d", &nextToken);
+    if (nextToken == 1) {
+        error(0);
     }
 }
 
@@ -535,8 +542,10 @@ int main (int argc, char *argv[])
     outputFile = fopen("elf.txt", "w");
 
     //global variable declaration
-    nextToken = 0;
+    getNextToken();
     tp = 1;
 
     program();
+    printAssemblyCode();
+    exit(EXIT_SUCCESS);
 }
