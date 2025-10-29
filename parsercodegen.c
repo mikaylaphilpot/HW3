@@ -38,6 +38,7 @@ Due Date: Friday, October 31, 2025 at 11:59 PM ET
 #include <string.h>
 #include <ctype.h>
 
+// Struct Declarations
 typedef struct {
     int kind; // const = 1, var = 2, proc = 3
     char name[12]; // name up to 11 chars
@@ -60,6 +61,7 @@ instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
 FILE *fp, *outputFile, *readFile;
 int nextToken; 
 int tp;
+int symbCount;
 int cx = 0; // code index, increments by one each time an instruction is stored
 
 // Function Prototypes
@@ -74,7 +76,7 @@ void term();
 void factor();
 int findSymbol(char * identifier);
 void insertSymbol(int kind, char * identifier, int val, int level, int addr);
-void deleteSymbol(char * identifier, int level);
+void deleteSymbol(char * identifier);
 void printAssemblyCode();
 void printSymbolTable();
 char * determineOpcode(int i);
@@ -354,14 +356,20 @@ void term(){
 }
 
 void factor(){
+
     char * identifier = malloc(sizeof(char)*12);
     int value; 
+
     if(nextToken == 2){
+
         fscanf(fp, "%s", identifier);
-        int symIdx = findSymbol(identifier); 
+        int symIdx = findSymbol(identifier);
+
         if(symIdx == -1){
             error(7);
-            
+        }
+        else if(symbol_table[symIdx].mark == 1){
+            error(17);
         }
         else if(symbol_table[symIdx].kind == 1){
             emit(1, 0, symbol_table[symIdx].val); //LIT 
@@ -390,9 +398,8 @@ void factor(){
 
 }
 
-//SYMBOL TABLE FUNCTIONS
+// Symbol Table Functions
 
-//&& symbol_table[i].level == level no level check 
 int findSymbol(char * identifier) {
     int i;
     for(i = tp; i >= 0; i--) {
@@ -411,33 +418,40 @@ void insertSymbol(int kind, char * identifier, int val, int level, int addr){
             strcpy(s1.name, identifier);
             s1.val = val;
             s1.level = level;
+            s1.addr = 0;
             s1.mark = 0;
         }
         else if(kind == 2){
             s1.kind = kind;
             strcpy(s1.name, identifier);
+            s1.val = 0;
             s1.level = level;
             s1.addr = addr;
             s1.mark = 0;
+            s1.mark = 0;
         }else{
-            printf("Procedure Called! Can't do.");
+            error(18);
         }
              
         symbol_table[tp] = s1;
         tp++;
+        symbCount++;
+        
     }
     
 }
 
-void deleteSymbol(char * identifier, int level){
-    for(int i = tp; i > 0; i--) {
-        if(strcmp(symbol_table[i].name, identifier) == 0 && symbol_table[i].level == level) {
+void deleteSymbol(char * identifier){
+
+    for(int i = tp; i >= 0; i--) {
+        if(strcmp(symbol_table[i].name, identifier) == 0) {
             symbol_table[i].mark = 1;
         }
-        tp--;
     }
+    tp--;
 }
 
+// Print Functions
 void printAssemblyCode() {
     printf("Assembly code: \n\n");
     printf("\nLine\tOP\tL\tM\n");
@@ -455,15 +469,24 @@ void printAssemblyCode() {
         fprintf(outputFile, " %d", instructionSet[i].L);
         fprintf(outputFile, " %d\n", instructionSet[i].M);
     }
-    printf("\n");
+    printf("\n\n");
 }
 
 void printSymbolTable() {
-    // To-Do: Figure out what parameters need to be passed
-    // To-Do: Print Beginning and Format Output
-    // To-Do: print actual content
+    
+    printf("Symbole Table:\n\n");
+
+    printf("Kind | Name \t |  Value |  Level |  Address|  Mark\n");
+    printf("---------------------------------------------------\n");
+    // for each symbol print kind, name, value, level, adress, and mark
+    for(int i = 0; i < symbCount; i++){
+        printf(" %d| \t\t%s| \t%d |\t %d |  \t%d | \t%d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
+        
+    }
+
 }
 
+// Helper functions
 char * determineOpcode(int i) {
     // determine instruction name based on its opcode
     if (instructionSet[i].OP == 1) {
@@ -503,11 +526,11 @@ void getNextToken () {
 
 // called when there's an error
 void error (int errorNumber) {
-    char * errors [17] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
+    char * errors [19] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
         "Error: symbol name has already been declared", "Error: constants must be assigned with =", "Error: constants must be assigned an integer value", 
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
-        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length"};
+        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length","Error: REPLACE", "Error: can't access symbol because mark set to one", "Error: program doesn't handle procedures"};
     fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");
@@ -533,8 +556,16 @@ int main (int argc, char *argv[])
     //global variable declaration
     getNextToken();
     tp = 0;
+    symbCount = 0;
 
     program();
+    
+    for(int i = tp; i >= 0; i--){
+        deleteSymbol(symbol_table[i].name);
+    }
+        
+    
     printAssemblyCode();
+    printSymbolTable();
     exit(EXIT_SUCCESS);
 }
