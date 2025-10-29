@@ -394,12 +394,13 @@ void factor(){
 
 //&& symbol_table[i].level == level no level check 
 int findSymbol(char * identifier) {
-    for(int i = tp; i > 0; i--) {
+    int i;
+    for(i = tp; i >= 0; i--) {
         if(strcmp(symbol_table[i].name, identifier) == 0) {
             return i;
         }
     }
-    return -1;
+    return i;
 }
 
 void insertSymbol(int kind, char * identifier, int val, int level, int addr){
@@ -531,7 +532,7 @@ int main (int argc, char *argv[])
 
     //global variable declaration
     getNextToken();
-    tp = 1;
+    tp = 0;
 
     program();
     printAssemblyCode();
