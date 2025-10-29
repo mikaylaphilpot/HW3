@@ -32,6 +32,7 @@ Class: COP3402 - System Software - Fall 2025
 Instructor: Dr. Jie Lin
 Due Date: Friday, October 31, 2025 at 11:59 PM ET
 */
+
 #define MAX_SYMBOL_TABLE_SIZE 500
 #include <stdio.h>
 #include <stdlib.h>
@@ -471,7 +472,7 @@ void printSymbolTable() {
     printf("---------------------------------------------------\n");
     // for each symbol print kind, name, value, level, adress, and mark
     for(int i = 0; i < symbCount; i++){
-        printf(" %d| \t\t%s| \t%d |\t %d |  \t%d | \t%d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
+        printf(" %d| \t\t%s| \t%d |\t %d |  \t%d | %d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
         
     }
 
