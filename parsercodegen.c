@@ -55,8 +55,6 @@ typedef struct{
     int M;
 } instruction;
 
-// Global Variable Declarations
-instruction code[500];
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
@@ -85,9 +83,13 @@ void printSymbolTable();
 char * determineOpcode(int i);
 void error (int errorNumber);
 void getNextToken();
+void emit(int OP, int L, int M);
 
-// Emit function
+//Emit function
 void emit(int OP, int L, int M){
+    if (cx > 500) {
+        error(16);
+    }
     instructionSet[cx].OP = OP;
     instructionSet[cx].L = L;
     instructionSet[cx].M = M;
@@ -220,14 +222,13 @@ void statement () {
         getNextToken();
         condition();
         int jpcIndex = cx;
-        // conditional jump to token 24
-        emit (8, 0, 24);
+        emit (8, 0, 0);
         if (nextToken != 24) {
             error(11);
         }
         getNextToken();
         statement();
-        code[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx;
         // next token should be fi based on grammar but no error specified
         if(nextToken == 23) {
             getNextToken();
@@ -246,7 +247,7 @@ void statement () {
         emit (8, 0, 0);
         statement();
         emit(7, 0, loopIndex);
-        code[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx;
         return;
     }
     if (nextToken == 32) {
@@ -339,6 +340,7 @@ void expression() {
 }
 
 void term(){
+
     factor();
     while(nextToken == 6 || nextToken == 7){
         if(nextToken == 6){
@@ -400,12 +402,13 @@ void factor(){
 // Symbol Table Functions
 
 int findSymbol(char * identifier) {
-    for(int i = tp; i >= 0; i--) {
+    int i;
+    for(i = tp; i >= 0; i--) {
         if(strcmp(symbol_table[i].name, identifier) == 0) {
             return i;
         }
     }
-    return -1;
+    return i;
 }
 
 void insertSymbol(int kind, char * identifier, int val, int level, int addr){
@@ -425,6 +428,7 @@ void insertSymbol(int kind, char * identifier, int val, int level, int addr){
             s1.val = 0;
             s1.level = level;
             s1.addr = addr;
+            s1.mark = 0;
             s1.mark = 0;
         }else{
             error(18);
@@ -460,6 +464,11 @@ void printAssemblyCode() {
         printf("\t%d", instructionSet[i].L);
         // Print M
         printf("\t%d", instructionSet[i].M);
+
+        // printing to file
+        fprintf(outputFile, "%d", instructionSet[i].OP);
+        fprintf(outputFile, " %d", instructionSet[i].L);
+        fprintf(outputFile, " %d\n", instructionSet[i].M);
     }
     printf("\n\n");
 }
@@ -522,7 +531,7 @@ void error (int errorNumber) {
         "Error: symbol name has already been declared", "Error: constants must be assigned with =", "Error: constants must be assigned an integer value", 
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
-        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols","Error: REPLACE", "Error: can't access symbol because mark set to one", "Error: program doesn't handle procedures"};
+        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length", "Error: can't access symbol because mark set to one", "Error: program doesn't handle procedures"};
     fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");

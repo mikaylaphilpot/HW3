@@ -1,0 +1,14 @@
+const limit = 5;
+var i, x, y;
+
+begin
+    i := 0;
+    while i < limit do
+        write i;
+        i := i + 1;
+    if y <> x then
+        write y
+    fi;
+    write x+ 1;
+    read x;   
+end.
