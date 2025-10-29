@@ -474,7 +474,7 @@ void printAssemblyCode() {
 
 void printSymbolTable() {
     
-    printf("Symbole Table:\n\n");
+    printf("Symbol Table:\n\n");
 
     printf("Kind | Name \t |  Value |  Level |  Address|  Mark\n");
     printf("---------------------------------------------------\n");
