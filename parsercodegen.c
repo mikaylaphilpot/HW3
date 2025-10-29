@@ -63,13 +63,6 @@ int nextToken;
 int tp;
 int cx = 0; // code index, increments by one each time an instruction is stored
 
-//Emit function
-void emit(int OP, int L, int M){
-    instructionSet[cx].OP = OP;
-    instructionSet[cx].L = L;
-    instructionSet[cx].M = M;
-    cx++;
-}
 // Function Prototypes
 void program();
 void block();
@@ -88,7 +81,18 @@ void printSymbolTable();
 char * determineOpcode(int i);
 void error (int errorNumber);
 void getNextToken();
+void emit(int OP, int L, int M);
 
+//Emit function
+void emit(int OP, int L, int M){
+    if (cx > 500) {
+        error(16);
+    }
+    instructionSet[cx].OP = OP;
+    instructionSet[cx].L = L;
+    instructionSet[cx].M = M;
+    cx++;
+}
 
 // Grammar Functions
 
@@ -335,6 +339,7 @@ void expression() {
 }
 
 void term(){
+
     factor();
     while(nextToken == 6 || nextToken == 7){
         if(nextToken == 6){
@@ -349,6 +354,7 @@ void term(){
     }
 
 }
+
 void factor(){
     char * identifier = malloc(sizeof(char)*12);
     int value; 
@@ -498,11 +504,11 @@ void getNextToken () {
 
 // called when there's an error
 void error (int errorNumber) {
-    char * errors [16] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
+    char * errors [17] = {"Error: Scanning error detected by lexer (skipsym present)", "Error: program must end with period", "Error: const, var, and read keywords must be followed by identifier", 
         "Error: symbol name has already been declared", "Error: constants must be assigned with =", "Error: constants must be assigned an integer value", 
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
-        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols"};
+        "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length"};
     fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");
