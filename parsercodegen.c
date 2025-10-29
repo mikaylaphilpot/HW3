@@ -263,7 +263,7 @@ void statement () {
             error(8);
         }
         getNextToken();
-        emit(3, 0, symbol_table[symIndex].addr);
+        emit(9, 0, 2);
         emit(4, 0, symbol_table[symIndex].addr); // TO-DO: figure out/verify what instructions read calls
         return;
     }
