@@ -207,14 +207,15 @@ void statement () {
     }
     if(nextToken == 20) {
         do {
-            fscanf(fp, " %d", &nextToken);
+            getNextToken();
             statement();
+            printf("%d", nextToken);
         } while (nextToken == 17);
         // Syntax error 10
         if (nextToken != 21) {
             error(10);
         }
-        fscanf(fp, "%d ", &nextToken);
+        getNextToken();
         return;
     }
     if(nextToken == 22) {
@@ -228,6 +229,7 @@ void statement () {
         getNextToken();
         statement();
         instructionSet[jpcIndex].M = cx*3;
+        getNextToken();
         // next token should be fi based on grammar but no error specified
         if(nextToken == 23) {
             getNextToken();
