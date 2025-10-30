@@ -163,6 +163,7 @@ int varDeclaration () {
             // Syntax error 2
             if (nextToken != 2) {
                 error(2);
+               
             }
             fscanf(fp, "%s", identifier);
             // Syntax error 3
@@ -176,7 +177,7 @@ int varDeclaration () {
         if (nextToken != 17) {
             error(6);
         }
-        fscanf(fp, " %d ", &nextToken);
+        getNextToken();
 
     }
     return numVars;
@@ -475,7 +476,7 @@ void printAssemblyCode() {
 
 void printSymbolTable() {
     
-    printf("Symbole Table:\n\n");
+    printf("Symbol Table:\n\n");
 
     printf("Kind | Name \t |  Value |  Level |  Address|  Mark\n");
     printf("---------------------------------------------------\n");
