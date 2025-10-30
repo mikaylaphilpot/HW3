@@ -209,14 +209,14 @@ void statement () {
     }
     if(nextToken == 20) {
         do {
-            fscanf(fp, " %d", &nextToken);
+            getNextToken();
             statement();
         } while (nextToken == 17);
         // Syntax error 10
         if (nextToken != 21) {
             error(10);
         }
-        fscanf(fp, "%d ", &nextToken);
+        getNextToken();
         return;
     }
     if(nextToken == 22) {
@@ -229,7 +229,8 @@ void statement () {
         }
         getNextToken();
         statement();
-        instructionSet[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx*3;
+        getNextToken();
         // next token should be fi based on grammar but no error specified
         if(nextToken == 23) {
             getNextToken();
@@ -238,7 +239,7 @@ void statement () {
     }
     if(nextToken == 25) {
         getNextToken();
-        int loopIndex = cx;
+        int loopIndex = cx*3;
         condition();
         if (nextToken != 26) {
             error(12);
@@ -248,7 +249,7 @@ void statement () {
         emit (8, 0, 0);
         statement();
         emit(7, 0, loopIndex);
-        instructionSet[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx*3;
         return;
     }
     if (nextToken == 32) {
@@ -265,14 +266,14 @@ void statement () {
             error(8);
         }
         getNextToken();
-        emit(3, 0, symbol_table[symIndex].addr);
-        emit(4, 0, symbol_table[symIndex].addr); // TO-DO: figure out/verify what instructions read calls
+        emit(9, 0, 2);
+        emit(4, 0, symbol_table[symIndex].addr);
         return;
     }
     if(nextToken == 31) {
         getNextToken();
         expression();
-        emit(9, 0, 1); // TO-DO: figure out what instructions write calls
+        emit(9, 0, 1);
         return;
     }
 }
