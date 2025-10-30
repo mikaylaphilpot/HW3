@@ -227,7 +227,7 @@ void statement () {
         }
         getNextToken();
         statement();
-        instructionSet[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx*3;
         // next token should be fi based on grammar but no error specified
         if(nextToken == 23) {
             getNextToken();
@@ -236,7 +236,7 @@ void statement () {
     }
     if(nextToken == 25) {
         getNextToken();
-        int loopIndex = cx;
+        int loopIndex = cx*3;
         condition();
         if (nextToken != 26) {
             error(12);
@@ -246,7 +246,7 @@ void statement () {
         emit (8, 0, 0);
         statement();
         emit(7, 0, loopIndex);
-        instructionSet[jpcIndex].M = cx;
+        instructionSet[jpcIndex].M = cx*3;
         return;
     }
     if (nextToken == 32) {
