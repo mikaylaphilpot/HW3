@@ -209,7 +209,6 @@ void statement () {
         do {
             getNextToken();
             statement();
-            printf("%d", nextToken);
         } while (nextToken == 17);
         // Syntax error 10
         if (nextToken != 21) {
