@@ -266,13 +266,13 @@ void statement () {
         }
         getNextToken();
         emit(9, 0, 2);
-        emit(4, 0, symbol_table[symIndex].addr); // TO-DO: figure out/verify what instructions read calls
+        emit(4, 0, symbol_table[symIndex].addr);
         return;
     }
     if(nextToken == 31) {
         getNextToken();
         expression();
-        emit(9, 0, 1); // TO-DO: figure out what instructions write calls
+        emit(9, 0, 1);
         return;
     }
 }
