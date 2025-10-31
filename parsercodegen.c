@@ -59,7 +59,7 @@ symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 instruction instructionSet[MAX_SYMBOL_TABLE_SIZE];
 
-FILE *fp, *outputFile, *readFile, *tokenOutputFile;
+FILE *fp, *outputFile, *readFile;
 int nextToken; 
 int tp;
 int symbCount;
@@ -534,7 +534,6 @@ char * determineOpcode(int i) {
 
 void getNextToken () {
     fscanf(fp, "%d", &nextToken);
-    fprintf(tokenOutputFile, "%d\n", nextToken);
     if (nextToken == 1) {
         error(0);
     }
@@ -569,7 +568,6 @@ int main (int argc, char *argv[])
     // take input from lex.c output file
     fp = fopen("tokens.txt", "r");
     outputFile = fopen("elf.txt", "w");
-    tokenOutputFile = fopen("checkTokens.txt", "w");
 
     //global variable declaration
     getNextToken();
