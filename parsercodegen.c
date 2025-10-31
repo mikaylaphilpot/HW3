@@ -97,7 +97,6 @@ void emit(int OP, int L, int M){
 }
 
 // Grammar Functions
-
 void program() {
     block();
     if (nextToken != 18) {
@@ -197,6 +196,9 @@ void statement () {
         if (symbol_table[symIndex].kind != 2) {
             error(8);
         }
+        if(symbol_table[symIndex].mark != 0){
+            error(17);
+        }
         getNextToken();
         // Syntax error 9
         if (nextToken != 19) {
@@ -264,6 +266,9 @@ void statement () {
         }
         if (symbol_table[symIndex].kind != 2) {
             error(8);
+        }
+        if(symbol_table[symIndex].mark != 0){
+            error(17);
         }
         getNextToken();
         emit(9, 0, 2);
@@ -371,7 +376,7 @@ void factor(){
         if(symIdx == -1){
             error(7);
         }
-        else if(symbol_table[symIdx].mark == 1){
+        else if(symbol_table[symIdx].mark != 0){
             error(17);
         }
         else if(symbol_table[symIdx].kind == 1){
@@ -454,6 +459,12 @@ void deleteSymbol(char * identifier){
     tp--;
 }
 
+void deleteAll(){
+    for(int i = tp; i >= 0; i--){
+        deleteSymbol(symbol_table[i].name);
+    }
+}
+
 // Print Functions
 void printAssemblyCode() {
     printf("Assembly code: \n\n");
@@ -479,11 +490,11 @@ void printSymbolTable() {
     
     printf("Symbol Table:\n\n");
 
-    printf("Kind | Name \t |  Value |  Level |  Address|  Mark\n");
+    printf("Kind | Name\t | Value | Level | Address | Mark\n");
     printf("---------------------------------------------------\n");
     // for each symbol print kind, name, value, level, adress, and mark
     for(int i = 0; i < symbCount; i++){
-        printf(" %d| \t\t%s| \t%d |\t %d |  \t%d | %d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
+        printf(" %4d| %10s| %6d| %6d|  %7d|%5d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
         
     }
 
@@ -537,6 +548,7 @@ void error (int errorNumber) {
     fclose(outputFile);
     // closing and re-opening the output file clears all previous printed text
     outputFile = fopen("elf.txt", "w");
+    deleteAll();
     printf("%s\n", errors[errorNumber]);
     fprintf(outputFile, "%s\n", errors[errorNumber]);
     exit(EXIT_FAILURE);
@@ -562,11 +574,8 @@ int main (int argc, char *argv[])
     symbCount = 0;
 
     program();
-    
-    for(int i = tp; i >= 0; i--){
-        deleteSymbol(symbol_table[i].name);
-    }
         
+    deleteAll();
     
     printAssemblyCode();
     printSymbolTable();
