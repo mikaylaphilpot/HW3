@@ -99,6 +99,7 @@ void emit(int OP, int L, int M){
 // Grammar Functions
 void program() {
     block();
+    // next token should be periodsym
     if (nextToken != 18) {
         error(1);
     }
@@ -108,129 +109,153 @@ void program() {
 void block () {
     constDeclaration();
     int numsVars = varDeclaration();
+    // allocates memory on stack for dynamic and static link, return address, and variables
     emit(6, 0, 3 + numsVars);
     statement();
 }
 
 void constDeclaration () {
+    // checks if a constant is being declared
     if(nextToken == 28) {
         char * identifier = malloc(sizeof(char)*12);
         int value;
         // loops because comma w/ more identifiers can occur 0 or more times
         do { 
             getNextToken(); // get next token
-            // Syntax error 2
+            // next token should be identifier
             if (nextToken != 2) {
                 error(2);
             }
+            // get identifier
             fscanf(fp, "%s", identifier);
-            // Check if symbol name has already been declared
-            // Syntax error 3
+            // Symbol name should not have been previously declared
             if (findSymbol(identifier) != -1) {
                 error(3);
             }
             getNextToken();
-            // Syntax error 4
+            // next token should be equal symbol, to assign value to const
             if(nextToken != 8) {
                 error(4);
             }
-            // Syntax error 5
             getNextToken();
+            // next token should be numsym
             if (nextToken != 3) {
                 error(5);
             }
+            // get number values
             fscanf(fp, "%d", &value);
             // insert symbol name into table
             insertSymbol(1, identifier, value, 0, 0);
             getNextToken();
-        } while (nextToken == 16);
-        // Syntax error 6
+        } while (nextToken == 16); // if next symbol is comma there's another const
+        // next symbol should be semicolon
         if (nextToken != 17) {
             error(6);
         }
+        // get next token to check
         getNextToken();
     }
 }
 
 int varDeclaration () {
+    // tracks number of variables for memory allocation
     int numVars = 0;
+    // checks if a var is being declared
     if (nextToken == 29) {
         char * identifier = malloc(sizeof(char)*12);
         do {
             numVars++;
             getNextToken();
-            // Syntax error 2
+            // next token should be identifier
             if (nextToken != 2) {
                 error(2);
                
             }
             fscanf(fp, "%s", identifier);
-            // Syntax error 3
+            // identifier shouldn't already be in symbol table 
             if(findSymbol(identifier) != -1) {
                 error(3);
             }
+            // insert identifier into symbol table
             insertSymbol(2, identifier, 0, 0, numVars + 2);
             getNextToken();
-        } while(nextToken == 16);
+        } while(nextToken == 16); // if next symbol is comma, another variable is being declared
 
+        // next symbol should be semicolon
         if (nextToken != 17) {
             error(6);
         }
+        // get next token to check
         getNextToken();
 
     }
+    // returns amount of variables to allocate memory for
     return numVars;
 }
 
 void statement () {
     char * identifier = malloc(sizeof(char)*12);
+    // checks if an identifier statement
     if (nextToken == 2) {
         fscanf(fp, "%s", identifier);
         
         int symIndex = findSymbol(identifier);
-        // Syntax error 7
+        // identifier should've been previously declared
         if (symIndex == -1) {
             error(7);
         }
-        // Syntax error 8
+        // identifier needs to be a variable
         if (symbol_table[symIndex].kind != 2) {
             error(8);
         }
+        // identifier should not have been marked as inactive
         if(symbol_table[symIndex].mark != 0){
             error(17);
         }
         getNextToken();
-        // Syntax error 9
+        // next token should be become symbol
         if (nextToken != 19) {
             error(9);
         }
         getNextToken();
+        // addresses expression being assigned to identifier
         expression();
+        // store in variable location
         emit(4, 0, symbol_table[symIndex].addr);
         return;
     }
+    // checks if it's a begin symbol statement
     if(nextToken == 20) {
+        // addresses all statements inside begin and end
         do {
             getNextToken();
             statement();
-        } while (nextToken == 17);
-        // Syntax error 10
+        } while (nextToken == 17); // if there's another statement, should be followed by semicolon
+        // after all statements in begin, end symbol expected
         if (nextToken != 21) {
             error(10);
         }
+        // gets next token to be addressed
         getNextToken();
+        // returns back to calling function
         return;
     }
+    // check for ifsym
     if(nextToken == 22) {
         getNextToken();
+        // addresses condition given to if
         condition();
+        // store index JPC instruction will be at
         int jpcIndex = cx;
+        // emit inital JPC instruction
         emit (8, 0, 0);
+        // then expected after if condition
         if (nextToken != 24) {
             error(11);
         }
         getNextToken();
         statement();
+        // change memory of JPC instruction to location of first instruction outside of if
         instructionSet[jpcIndex].M = cx*3;
         getNextToken();
         // needs to be an fi after if statement ends
@@ -240,8 +265,10 @@ void statement () {
         getNextToken();
         return;
     }
+    // check for whilesym
     if(nextToken == 25) {
         getNextToken();
+        // store index of condition instruction
         int loopIndex = cx*3;
         condition();
         if (nextToken != 26) {
@@ -249,89 +276,107 @@ void statement () {
         }
         getNextToken();
         int jpcIndex = cx;
+        // jumps past loop if condition isn't met
         emit (8, 0, 0);
         statement();
+        // unconditional jump back to condition instruction
         emit(7, 0, loopIndex);
+        // store location of first non-loop instruction in M of JPC instruction
         instructionSet[jpcIndex].M = cx*3;
         return;
     }
+    // check for readsym
     if (nextToken == 32) {
         getNextToken();
+        // identifier expected
         if (nextToken != 2) {
             error(2);
         }
+        // get identifier
         fscanf(fp, "%s", identifier);
         int symIndex = findSymbol(identifier);
+        // make sure identifier has been previously declared
         if (symIndex == -1) {
             error(7);
         }
+        // identifier should be variable type
         if (symbol_table[symIndex].kind != 2) {
             error(8);
         }
+        // make sure identifier isn't marked inactive
         if(symbol_table[symIndex].mark != 0){
             error(17);
         }
         getNextToken();
+        // read from stdin
         emit(9, 0, 2);
+        // store in variable
         emit(4, 0, symbol_table[symIndex].addr);
         return;
     }
+    // check if write sym
     if(nextToken == 31) {
         getNextToken();
+        // called for expression being written
         expression();
+        // emit write instruction
         emit(9, 0, 1);
         return;
     }
 }
 
 void condition() { 
+    // if even sym 
     if(nextToken == 34){
         getNextToken();
         expression();
         emit(2, 0, 11); //EVEN
-    }else{
+    }
+    else {
+        // gets expression, then checks what symbol
         expression();
-            if(nextToken == 8){
-                getNextToken();
-                expression();
-                emit(2, 0, 5); //EQl
-            }
-            else if(nextToken == 9){
-                getNextToken();
-                expression();
-                emit(2, 0, 6); //NEQ
-            }
-            else if(nextToken == 10){
-                getNextToken();
-                expression();
-                emit(2, 0, 7); //LSS
-            }
-            else if(nextToken == 11){
-                getNextToken();
-                expression();
-                emit(2, 0, 8); //LEQ
-            }
-            else if(nextToken == 12){
-                getNextToken();
-                expression();
-                emit(2, 0, 9); //GTR
-            }
-            else if(nextToken == 13){
-                getNextToken();
-                expression();
-                emit(2, 0, 10); //GEQ
-            }
-            else{
-                //condition error
-                error(13);
-            }
+        if(nextToken == 8){
+            getNextToken();
+            expression();
+            emit(2, 0, 5); //EQl
+        }
+        else if(nextToken == 9){
+            getNextToken();
+            expression();
+            emit(2, 0, 6); //NEQ
+        }
+        else if(nextToken == 10){
+            getNextToken();
+            expression();
+            emit(2, 0, 7); //LSS
+        }
+        else if(nextToken == 11){
+            getNextToken();
+            expression();
+            emit(2, 0, 8); //LEQ
+        }
+        else if(nextToken == 12){
+            getNextToken();
+            expression();
+            emit(2, 0, 9); //GTR
+        }
+        else if(nextToken == 13){
+            getNextToken();
+            expression();
+            emit(2, 0, 10); //GEQ
+        }
+        else{
+            // condition error, not one of the symbols expected
+            error(13);
+        }
     }
     
 }
 
 void expression() {
-
+    // call term
     term();
+    // check if add or minus symbol present
     while(nextToken == 4 || nextToken == 5){
         if(nextToken == 4){
             getNextToken();
@@ -348,8 +393,9 @@ void expression() {
 }
 
 void term(){
-
+    // calls factor
     factor();
+    // if multiply or divide symbol present
     while(nextToken == 6 || nextToken == 7){
         if(nextToken == 6){
             getNextToken();
@@ -369,6 +415,7 @@ void factor(){
     char * identifier = malloc(sizeof(char)*12);
     int value; 
 
+    // check if identifier symbol
     if(nextToken == 2){
 
         fscanf(fp, "%s", identifier);
@@ -388,21 +435,25 @@ void factor(){
         }
         getNextToken();
     }
+    // check if number symbol
     else if(nextToken == 3){
         fscanf(fp, "%d", &value); // getting num value
         emit(1, 0, value); //LIT
         getNextToken();
     }
+    // check if left parentheses symbol
     else if(nextToken == 14){
         getNextToken();
         expression();
+        // expecting right parentheses after left parentheses
         if(nextToken != 15){
             error(14);
         }
         getNextToken();
     }
     else{
-        error(15); //TO-DO: check if correct error
+        // unexpected input for arithmetic equation
+        error(15);
     }
 
 }
@@ -422,26 +473,31 @@ int findSymbol(char * identifier) {
 void insertSymbol(int kind, char * identifier, int val, int level, int addr){
     if(findSymbol(identifier) == -1 ){
         symbol s1;
+        // if constant
         if (kind == 1){
             s1.kind = kind;
             strcpy(s1.name, identifier);
             s1.val = val;
             s1.level = level;
+            // declare address as zero as placeholder for unused category
             s1.addr = 0;
             s1.mark = 0;
         }
+        // if variable
         else if(kind == 2){
             s1.kind = kind;
             strcpy(s1.name, identifier);
+            // declare value as zero as placeholder for unused category
             s1.val = 0;
             s1.level = level;
             s1.addr = addr;
             s1.mark = 0;
-            s1.mark = 0;
-        }else{
+        }else {
+            // expecting variable or constant
             error(18);
         }
-             
+        
+        // place in next available slot on symbol table
         symbol_table[tp] = s1;
         tp++;
         symbCount++;
@@ -453,14 +509,17 @@ void insertSymbol(int kind, char * identifier, int val, int level, int addr){
 void deleteSymbol(char * identifier){
 
     for(int i = tp; i >= 0; i--) {
+        // find identifier's location on symbol table
         if(strcmp(symbol_table[i].name, identifier) == 0) {
+            // change mark to 1
             symbol_table[i].mark = 1;
         }
     }
     tp--;
 }
 
-void deleteAll(){
+// change mark of all symbols to 1
+void deleteAll() {
     for(int i = tp; i >= 0; i--){
         deleteSymbol(symbol_table[i].name);
     }
@@ -493,9 +552,9 @@ void printSymbolTable() {
 
     printf("Kind | Name\t | Value | Level | Address | Mark\n");
     printf("---------------------------------------------------\n");
-    // for each symbol print kind, name, value, level, adress, and mark
+    // for each symbol print kind, name, value, level, address, and mark
     for(int i = 0; i < symbCount; i++){
-        printf(" %4d| %10s| %6d| %6d|  %7d|%5d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
+        printf(" %4d| %11s| %5d| %6d|  %7d|%5d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr, symbol_table[i].mark);
         
     }
 
@@ -533,7 +592,9 @@ char * determineOpcode(int i) {
 }
 
 void getNextToken () {
+    // scans for next token in input file
     fscanf(fp, "%d", &nextToken);
+    // if next token is 1, call skipsym error
     if (nextToken == 1) {
         error(0);
     }
@@ -546,9 +607,6 @@ void error (int errorNumber) {
         "Error: constant and variable declarations must be followed by a semicolon", "Error: undeclared identifier", "Error: only variable values may be altered", "Error: assignment statements must use :=",
         "Error: begin must be followed by end", "Error: if must be followed by then", "Error: while must be followed by do", "Error: condition must contain comparison operator", "Error: right parenthesis must follow left parenthesis", 
         "Error: arithmetic equations must contain operands, parentheses, numbers, or symbols", "Error: code index exceeded code length", "Error: can't access symbol because mark set to one", "Error: program doesn't handle procedures", "Error: fi must follow if statement"};
-    fclose(outputFile);
-    // closing and re-opening the output file clears all previous printed text
-    outputFile = fopen("elf.txt", "w");
     deleteAll();
     printf("%s\n", errors[errorNumber]);
     fprintf(outputFile, "%s\n", errors[errorNumber]);
@@ -563,9 +621,9 @@ int main (int argc, char *argv[])
         return 1;
     } 
 
+    // hard coded instruction to jump to program
     emit(7, 0, 3);
-    // Note: input file name is hardcoded
-    // take input from lex.c output file
+    // open input and output files
     fp = fopen("tokens.txt", "r");
     outputFile = fopen("elf.txt", "w");
 
